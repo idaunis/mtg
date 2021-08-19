@@ -48,6 +48,11 @@ func (s *MTKView) device() *MTLDevice {
 	return &MTLDevice{ptr}
 }
 
+func (s *MTKView) layer() *CAMetalLayer {
+	ptr := C.MTKView_layer(s.ptr)
+	return &CAMetalLayer{ptr}
+}
+
 type MTLDevice struct {
 	ptr unsafe.Pointer
 }
@@ -59,6 +64,36 @@ func (s *MTLDevice) newCommandQueue() *MTLCommandQueue {
 
 type MTLCommandQueue struct {
 	ptr unsafe.Pointer
+}
+
+func (s *MTLCommandQueue) commandBuffer() *MTLCommandBuffer {
+	ptr := C.MTLCommandQueue_commandBuffer(s.ptr)
+	return &MTLCommandBuffer{ptr}
+}
+
+type MTLCommandBuffer struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLCommandBuffer) renderCommandEncoderWithDescriptor(passDescriptor *MTLRenderPassDescriptor) *MTLRenderCommandEncoder {
+	ptr := C.MTLCommandBuffer_renderCommandEncoderWithDescriptor(s.ptr, passDescriptor.ptr)
+	return &MTLRenderCommandEncoder{ptr}
+}
+
+func (s *MTLCommandBuffer) presentDrawable(drawable *CAMetalDrawable) {
+	C.MTLCommandBuffer_presentDrawable(s.ptr, drawable.ptr)
+}
+
+func (s *MTLCommandBuffer) commit() {
+	C.MTLCommandBuffer_commit(s.ptr)
+}
+
+type MTLRenderCommandEncoder struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLRenderCommandEncoder) endEncoding() {
+	C.MTLRenderCommandEncoder_endEncoding(s.ptr)
 }
 
 type MTLRenderPassDescriptor struct {
@@ -93,28 +128,25 @@ type ColorAttachment struct {
 	clearColor  MTLClearColor
 }
 
-//export test
-func test() float64 {
-	return float64(0.2)
-}
-
 var (
 	device       *MTLDevice
 	commandQueue *MTLCommandQueue
+	metalLayer   *CAMetalLayer
 )
 
 //export renderInitWithMetalKitView
 func renderInitWithMetalKitView(mkViewPtr unsafe.Pointer) {
 	view := &MTKView{mkViewPtr}
+
 	device = view.device()
+	metalLayer = view.layer()
 	commandQueue = device.newCommandQueue()
 
-	fmt.Println("InitWithMetalKitView", view, device, commandQueue)
+	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue)
 }
 
 //export renderDrawInMTKView
-func renderDrawInMTKView(metalLayerPtr unsafe.Pointer, mkViewPtr unsafe.Pointer) {
-	metalLayer := &CAMetalLayer{metalLayerPtr}
+func renderDrawInMTKView(mkViewPtr unsafe.Pointer) {
 	view := &MTKView{mkViewPtr}
 
 	drawable := metalLayer.nextDrawable()
@@ -126,8 +158,15 @@ func renderDrawInMTKView(metalLayerPtr unsafe.Pointer, mkViewPtr unsafe.Pointer)
 		texture:     texture,
 		loadAction:  MTLLoadActionClear,
 		storeAction: MTLStoreActionStore,
-		clearColor:  MTLClearColor{0, 1, 0, 1},
+		clearColor:  MTLClearColor{1, 1, 0, 1},
 	})
 
-	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture)
+	commandBuffer := commandQueue.commandBuffer()
+	commandEncoder := commandBuffer.renderCommandEncoderWithDescriptor(renderPassDescriptor)
+
+	commandEncoder.endEncoding()
+	commandBuffer.presentDrawable(drawable)
+	commandBuffer.commit()
+
+	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture, commandEncoder)
 }

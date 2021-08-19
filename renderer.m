@@ -4,7 +4,7 @@
 #include "renderer.h"
 #include "renderer2.h"
 
-void renderDrawInMTKView(CAMetalLayer *, MTKView *);
+void renderDrawInMTKView(MTKView *);
 void renderInitWithMetalKitView(MTKView *);
 
 void *CAMetalLayer_nextDrawable(void *metalLayer) {
@@ -19,6 +19,10 @@ void *MTKView_device(void *view) {
     return (id<MTLDevice>) ((MTKView *) view).device;
 }
 
+void *MTKView_layer(void *view) {
+    return (CAMetalLayer*) ((MTKView *) view).layer;
+}
+
 void *CAMetalDrawable_texture(void *drawable) {
     return (id<MTLTexture>) ((id<CAMetalDrawable>) drawable).texture;
 }
@@ -27,6 +31,25 @@ void *MTLDevice_newCommandQueue(void *device) {
     return (id<MTLCommandQueue>) [(id<MTLDevice>)device newCommandQueue];
 }
 
+void *MTLCommandQueue_commandBuffer(void *commandQueue) {
+    return (id<MTLCommandBuffer>) [(id<MTLCommandQueue>)commandQueue commandBuffer];
+}
+
+void *MTLCommandBuffer_renderCommandEncoderWithDescriptor(void *commandBuffer, void *passDescriptor) {
+    return (id<MTLRenderCommandEncoder>) [(id<MTLCommandBuffer>)commandBuffer renderCommandEncoderWithDescriptor:(MTLRenderPassDescriptor *)passDescriptor];
+}
+
+void MTLCommandBuffer_presentDrawable(void *commandBuffer, void *drawable) {
+    [(id<MTLCommandBuffer>)commandBuffer presentDrawable:(id<CAMetalDrawable>)drawable];
+}
+
+void MTLCommandBuffer_commit(void *commandBuffer) {
+    [(id<MTLCommandBuffer>)commandBuffer commit];
+}
+
+void MTLRenderCommandEncoder_endEncoding(void *commandEncoder) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder endEncoding];
+}
 
 void MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, MTLLoadAction loadAction, MTLStoreAction storeAction, MTLClearColor clearColor, void *texture) {
     ((MTLRenderPassDescriptor *) passDescriptor).colorAttachments[0].loadAction = loadAction;
@@ -37,76 +60,22 @@ void MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, MTLLoadActio
 
 @implementation Renderer
 {
-    id<MTLDevice> _device;
 
-    id<MTLCommandQueue> _commandQueue;
-
-    CAMetalLayer * metalLayer;
 }
 
 - (nonnull instancetype)initWithMetalKitView:(nonnull MTKView *)view {
     self = [super init];
     if (self) {
         renderInitWithMetalKitView(view);
-        metalLayer = (CAMetalLayer*) view.layer;
-        _device = view.device;
-        _commandQueue = [_device newCommandQueue];
     }
     return self;
 }
 
 - (void)drawInMTKView:(nonnull MTKView *)view
 {
-    renderDrawInMTKView(metalLayer, view);
+    renderDrawInMTKView(view);
 }
 
-
-/// Called whenever the view needs to render a frame.
-- (void)drawInMTKView2:(nonnull MTKView *)view
-{
-    NSLog(@"draw");
-    // The render pass descriptor references the texture into which Metal should draw
-    //MTLRenderPassDescriptor *passDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-    MTLRenderPassDescriptor *passDescriptor = view.currentRenderPassDescriptor;
-
-    if (passDescriptor == nil) {
-        return;
-    }
-
-    // Get the drawable that will be presented at the end of the frame
-
-    /*
-    id<MTLDrawable> drawable = view.currentDrawable;
-    id<MTLTexture> texture = [drawable texture];
-    */
-
-    NSLog(@"%.20f",test());
-
-    id<CAMetalDrawable> drawable = [metalLayer nextDrawable];
-    id<MTLTexture> texture = drawable.texture;
-    
-    
-    passDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
-    passDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-    passDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(1, test(), 1, 1);
-    passDescriptor.colorAttachments[0].texture = texture;
-    passDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0, 0, 1, 1);
-
-    id<MTLCommandBuffer> commandBuffer = [_commandQueue commandBuffer];
-    
-    // Create a render pass and immediately end encoding, causing the drawable to be cleared
-    id<MTLRenderCommandEncoder> commandEncoder = [commandBuffer renderCommandEncoderWithDescriptor:passDescriptor];
-    
-    [commandEncoder endEncoding];
-
-    // Request that the drawable texture be presented by the windowing system once drawing is done
-    [commandBuffer presentDrawable:drawable];
-    
-    [commandBuffer commit];
-}
-
-
-/// Called whenever view changes orientation or is resized
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
     NSLog(@"drawableSizeWillChange");
