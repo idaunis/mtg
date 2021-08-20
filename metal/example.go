@@ -1,4 +1,4 @@
-package main
+package metal
 
 /*
 #cgo CFLAGS: -x objective-c
@@ -28,7 +28,7 @@ int Menu() {
 
     return 0;
 }
-int Window() {
+void *Window() {
     id appName = [[NSProcessInfo processInfo] processName];
     NSWindow * window = [[[NSWindow alloc] initWithContentRect: NSMakeRect(0, 0, 640, 480)
         styleMask: NSWindowStyleMaskTitled | NSWindowStyleMaskMiniaturizable | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable
@@ -63,27 +63,53 @@ int Window() {
 
     mtkView.clearColor = MTLClearColorMake(0.0, 0.5, 0.25, 1.0);
 
-    Renderer * renderer = [[Renderer alloc] initWithMetalKitView:mtkView];
+    return mtkView;
+}
+void RenderDelegate(void *mtkView) {
+    Renderer * renderer = [[Renderer alloc] initWithMetalKitView:(MTKView *)mtkView];
 
     if (!renderer) {
         NSLog(@"Renderer initialization failed");
     }
 
-    [renderer mtkView:mtkView drawableSizeWillChange:mtkView.bounds.size];
+    [renderer mtkView:(MTKView *)mtkView drawableSizeWillChange:((MTKView *)mtkView).bounds.size];
 
-    mtkView.delegate = renderer;
+    ((MTKView *)mtkView).delegate = renderer;
 
     NSLog(@"ok");
-
+}
+void RunApp() {
     [NSApp activateIgnoringOtherApps:YES];
     [NSApp run];
-    return 0;
 }
 */
 import "C"
 
-func main() {
+func CreateApp() {
 	C.StartApp()
 	C.Menu()
-	C.Window()
+}
+
+func CreateWindow() *MTKView {
+	ptr := C.Window()
+	return &MTKView{ptr}
+}
+
+type delegateFuncs struct {
+	init, draw func(*MTKView)
+}
+
+var delegates map[uintptr]delegateFuncs
+
+func RenderDelegate(view *MTKView, init, draw func(*MTKView)) {
+	viewAddr := uintptr(view.ptr)
+	if delegates == nil {
+		delegates = make(map[uintptr]delegateFuncs)
+	}
+	delegates[viewAddr] = delegateFuncs{init, draw}
+	C.RenderDelegate(view.ptr)
+}
+
+func RunApp() {
+	C.RunApp()
 }

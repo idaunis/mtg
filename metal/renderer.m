@@ -31,6 +31,20 @@ void *MTLDevice_newCommandQueue(void *device) {
     return (id<MTLCommandQueue>) [(id<MTLDevice>)device newCommandQueue];
 }
 
+void *MTLDevice_newLibraryWithData(void *device, void *data) {
+    return (id<MTLLibrary>) [(id<MTLDevice>)device newLibraryWithData:(dispatch_data_t)data error:nil];
+}
+
+void *MTLDevice_newLibraryWithSource(void *device, char *source, void *options) {
+    NSString *nsSource = [NSString stringWithUTF8String:source];
+    return (id<MTLLibrary>) [(id<MTLDevice>)device newLibraryWithSource:nsSource options:(MTLCompileOptions *)options error:nil];
+}
+
+void *MTLLibrary_newFunctionWithName(void *library, char *name) {
+    NSString *nsName = [NSString stringWithUTF8String:name];
+    return (id<MTLFunction>) [(id<MTLLibrary>)library newFunctionWithName:nsName];
+}
+
 void *MTLCommandQueue_commandBuffer(void *commandQueue) {
     return (id<MTLCommandBuffer>) [(id<MTLCommandQueue>)commandQueue commandBuffer];
 }
