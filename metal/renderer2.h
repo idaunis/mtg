@@ -8,10 +8,30 @@ void *CAMetalDrawable_texture(void *drawable);
 void *MTLDevice_newCommandQueue(void *device);
 void *MTLDevice_newLibraryWithData(void *device, void *data);
 void *MTLDevice_newLibraryWithSource(void *device, char *source, void *options);
+void *MTLDevice_newRenderPipelineStateWithDescriptor(void *device, void *pipelineDescriptor);
+void *MTLDevice_newBufferWithBytes(void *device, void *data, int length, MTLResourceOptions options);
+void *MTLDevice_newBufferWithVectors(void *device, vector_float4 vertices[], int length, MTLResourceOptions options);
+void *MTLDevice_newBufferWithInts(void *device, uint16_t vertices[], int length, MTLResourceOptions options);
 void *MTLLibrary_newFunctionWithName(void *library, char *name);
 void *MTLCommandQueue_commandBuffer(void *commandQueue);
 void *MTLCommandBuffer_renderCommandEncoderWithDescriptor(void *commandBuffer, void *passDescriptor);
 void MTLCommandBuffer_presentDrawable(void *commandBuffer, void *drawable);
 void MTLCommandBuffer_commit(void *commandBuffer);
 void MTLRenderCommandEncoder_endEncoding(void *commandEncoder);
-void MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, MTLLoadAction loadAction, MTLStoreAction storeAction, MTLClearColor clearColor, void *texture);
+void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *ps);
+void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vb, int offset, int atIndex);
+void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveType type, int start, int count);
+void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset);
+
+void *MTLRenderPipelineDescriptor_new();
+void MTLRenderPipelineDescriptor_set_vertexFunction(void *pdesc, void *fn);
+void MTLRenderPipelineDescriptor_set_fragmentFunction(void *pdesc, void *fn);
+
+void *MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, int idx);
+void colorAttachments_set_loadAction(void *cad, MTLLoadAction loadAction);
+void colorAttachments_set_storeAction(void *cad, MTLStoreAction storeAction);
+void colorAttachments_set_clearColor(void *cad, MTLClearColor clearColor);
+void colorAttachments_set_texture(void *cad, void *texture);
+
+void *MTLRenderPipelineDescriptor_colorAttachments(void *pdesc, int ids);
+void colorAttachments_set_pixelFormat(void *cad, MTLPixelFormat pixelFormat);

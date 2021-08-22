@@ -8,7 +8,6 @@ package metal
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -67,8 +66,46 @@ func (s *MTLDevice) NewLibraryWithSource(source string) *MTLLibrary {
 	return &MTLLibrary{ptr}
 }
 
-func (s *MTLDevice) NewBufferWithBytes(vertices []MBEVertex, size int, options int) {
-	fmt.Println("newBufferWithBytes", vertices, size, options)
+func (s *MTLDevice) NewBufferWithBytes(data unsafe.Pointer, size uintptr, count int, options MTLResourceOptions) *MTLBuffer {
+	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, data, C.int(size), C.MTLResourceOptions(options))
+	return &MTLBuffer{ptr, count}
+}
+
+func (s *MTLDevice) NewBufferWithByteArray(data []byte, size int, count int, options MTLResourceOptions) *MTLBuffer {
+	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, unsafe.Pointer(&data[0]), C.int(size), C.MTLResourceOptions(options))
+	return &MTLBuffer{ptr, count}
+}
+
+func (s *MTLDevice) NewBufferWithVectors(vertices []Vector_float4, options MTLResourceOptions) *MTLBuffer {
+	size := int(unsafe.Sizeof(vertices[0])) * len(vertices)
+	ptr := C.MTLDevice_newBufferWithVectors(s.ptr, (*C.vector_float4)(&(vertices[0])), C.int(size), C.MTLResourceOptions(options))
+	return &MTLBuffer{ptr, len(vertices)}
+}
+
+func (s *MTLDevice) NewBufferWithVectors2(vertices [][2]Vector_float4, options MTLResourceOptions) *MTLBuffer {
+	size := int(unsafe.Sizeof(vertices[0])) * len(vertices)
+	ptr := C.MTLDevice_newBufferWithVectors(s.ptr, (*C.vector_float4)(&(vertices[0][0])), C.int(size), C.MTLResourceOptions(options))
+	return &MTLBuffer{ptr, len(vertices)}
+}
+
+func (s *MTLDevice) NewBufferWithInts(vertices []Uint16, options MTLResourceOptions) *MTLBuffer {
+	size := int(unsafe.Sizeof(vertices[0])) * len(vertices)
+	ptr := C.MTLDevice_newBufferWithInts(s.ptr, (*C.uint16_t)(&(vertices[0])), C.int(size), C.MTLResourceOptions(options))
+	return &MTLBuffer{ptr, len(vertices)}
+}
+
+type MTLBuffer struct {
+	ptr   unsafe.Pointer
+	Count int
+}
+
+func (s *MTLDevice) NewRenderPipelineStateWithDescriptor(pipelineDescriptor *MTLRenderPipelineDescriptor) *MTLRenderPipelineState {
+	ptr := C.MTLDevice_newRenderPipelineStateWithDescriptor(s.ptr, pipelineDescriptor.ptr)
+	return &MTLRenderPipelineState{ptr}
+}
+
+type MTLRenderPipelineState struct {
+	ptr unsafe.Pointer
 }
 
 type MTLLibrary struct {
@@ -114,6 +151,22 @@ type MTLRenderCommandEncoder struct {
 	ptr unsafe.Pointer
 }
 
+func (s *MTLRenderCommandEncoder) SetRenderPipelineState(ps *MTLRenderPipelineState) {
+	C.MTLRenderCommandEncoder_setRenderPipelineState(s.ptr, ps.ptr)
+}
+
+func (s *MTLRenderCommandEncoder) SetVertexBuffer(ps *MTLBuffer, offset int, atIndex int) {
+	C.MTLRenderCommandEncoder_setVertexBuffer(s.ptr, ps.ptr, C.int(offset), C.int(atIndex))
+}
+
+func (s *MTLRenderCommandEncoder) DrawPrimitives(primitiveType MTLPrimitiveType, vertexStart int, vertexCount int) {
+	C.MTLRenderCommandEncoder_drawPrimitives(s.ptr, C.MTLPrimitiveType(primitiveType), C.int(vertexStart), C.int(vertexCount))
+}
+
+func (s *MTLRenderCommandEncoder) DrawIndexedPrimitives(primitiveType MTLPrimitiveType, indexCount int, indexType MTLIndexType, indexBuffer *MTLBuffer, indexBufferOffset int) {
+	C.MTLRenderCommandEncoder_drawIndexedPrimitives(s.ptr, C.MTLPrimitiveType(primitiveType), C.int(indexCount), C.MTLIndexType(indexType), indexBuffer.ptr, C.int(indexBufferOffset))
+}
+
 func (s *MTLRenderCommandEncoder) EndEncoding() {
 	C.MTLRenderCommandEncoder_endEncoding(s.ptr)
 }
@@ -123,19 +176,53 @@ type MTLRenderPassDescriptor struct {
 }
 
 func (s *MTLRenderPassDescriptor) ColorAttachment(ca *ColorAttachment) {
-	C.MTLRenderPassDescriptor_colorAttachments(
-		s.ptr,
-		C.MTLLoadAction(ca.LoadAction),
-		C.MTLStoreAction(ca.StoreAction),
-		C.MTLClearColor{C.double(ca.ClearColor.Red), C.double(ca.ClearColor.Green), C.double(ca.ClearColor.Blue), C.double(ca.ClearColor.Alpha)},
-		ca.Texture.ptr,
-	)
+	ptr := C.MTLRenderPassDescriptor_colorAttachments(s.ptr, 0)
+	C.colorAttachments_set_loadAction(ptr, C.MTLLoadAction(ca.LoadAction))
+	C.colorAttachments_set_storeAction(ptr, C.MTLStoreAction(ca.StoreAction))
+	C.colorAttachments_set_clearColor(ptr, C.MTLClearColor{C.double(ca.ClearColor.Red), C.double(ca.ClearColor.Green), C.double(ca.ClearColor.Blue), C.double(ca.ClearColor.Alpha)})
+	C.colorAttachments_set_texture(ptr, ca.Texture.ptr)
+}
+
+type MTLRenderPipelineDescriptor struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLRenderPipelineDescriptor) SetVertexFunction(fn *MTLFunction) {
+	C.MTLRenderPipelineDescriptor_set_vertexFunction(s.ptr, fn.ptr)
+}
+
+func (s *MTLRenderPipelineDescriptor) SetFragmentFunction(fn *MTLFunction) {
+	C.MTLRenderPipelineDescriptor_set_fragmentFunction(s.ptr, fn.ptr)
+}
+
+type MTLRenderPipelineColorAttachmentDescriptor struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLRenderPipelineColorAttachmentDescriptor) SetPixelFormat(pixelFormat MTLPixelFormat) {
+	C.colorAttachments_set_pixelFormat(s.ptr, C.MTLPixelFormat(pixelFormat))
+}
+
+func (s *MTLRenderPipelineDescriptor) ColorAttachment(idx int) *MTLRenderPipelineColorAttachmentDescriptor {
+	ptr := C.MTLRenderPipelineDescriptor_colorAttachments(s.ptr, C.int(idx))
+	return &MTLRenderPipelineColorAttachmentDescriptor{ptr}
+}
+
+func NewMTLRenderPipelineDescriptor() *MTLRenderPipelineDescriptor {
+	ptr := C.MTLRenderPipelineDescriptor_new()
+	return &MTLRenderPipelineDescriptor{ptr}
 }
 
 type (
-	MTLLoadAction  C.MTLLoadAction
-	MTLStoreAction C.MTLStoreAction
-	Vector_float4  C.vector_float4
+	MTLLoadAction      C.MTLLoadAction
+	MTLStoreAction     C.MTLStoreAction
+	Vector_float4      C.vector_float4
+	Matrix_float4x4    [4]C.vector_float4
+	Uint16             C.uint16_t
+	MTLPixelFormat     C.MTLPixelFormat
+	MTLResourceOptions C.MTLResourceOptions
+	MTLPrimitiveType   C.MTLPrimitiveType
+	MTLIndexType       C.MTLIndexType
 )
 
 type MTLClearColor struct {
@@ -146,8 +233,11 @@ type MTLClearColor struct {
 }
 
 const (
-	MTLLoadActionClear  MTLLoadAction  = C.MTLLoadActionClear
-	MTLStoreActionStore MTLStoreAction = C.MTLStoreActionStore
+	MTLPixelFormatBGRA8Unorm MTLPixelFormat   = C.MTLPixelFormatBGRA8Unorm
+	MTLLoadActionClear       MTLLoadAction    = C.MTLLoadActionClear
+	MTLStoreActionStore      MTLStoreAction   = C.MTLStoreActionStore
+	MTLPrimitiveTypeTriangle MTLPrimitiveType = C.MTLPrimitiveTypeTriangle
+	MTLIndexTypeUInt16       MTLIndexType     = C.MTLIndexTypeUInt16
 
 	MTLResourceCPUCacheModeDefaultCache = C.MTLResourceCPUCacheModeDefaultCache
 )

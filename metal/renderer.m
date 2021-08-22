@@ -40,6 +40,22 @@ void *MTLDevice_newLibraryWithSource(void *device, char *source, void *options) 
     return (id<MTLLibrary>) [(id<MTLDevice>)device newLibraryWithSource:nsSource options:(MTLCompileOptions *)options error:nil];
 }
 
+void *MTLDevice_newRenderPipelineStateWithDescriptor(void *device, void *pipelineDescriptor) {
+    return (id<MTLRenderPipelineState>) [(id<MTLDevice>)device newRenderPipelineStateWithDescriptor:(MTLRenderPipelineDescriptor *)pipelineDescriptor error:nil];
+}
+
+void *MTLDevice_newBufferWithBytes(void *device, void *data, int length, MTLResourceOptions options) {
+    return (id<MTLBuffer>) [(id<MTLDevice>)device newBufferWithBytes:data length:length options:options];
+}
+
+void *MTLDevice_newBufferWithVectors(void *device, vector_float4 vertices[], int length, MTLResourceOptions options) {
+    return (id<MTLBuffer>) [(id<MTLDevice>)device newBufferWithBytes:vertices length:length options:options];
+}
+
+void *MTLDevice_newBufferWithInts(void *device, uint16_t vertices[], int length, MTLResourceOptions options) {
+    return (id<MTLBuffer>) [(id<MTLDevice>)device newBufferWithBytes:vertices length:length options:options];
+}
+
 void *MTLLibrary_newFunctionWithName(void *library, char *name) {
     NSString *nsName = [NSString stringWithUTF8String:name];
     return (id<MTLFunction>) [(id<MTLLibrary>)library newFunctionWithName:nsName];
@@ -65,11 +81,62 @@ void MTLRenderCommandEncoder_endEncoding(void *commandEncoder) {
     [(id<MTLRenderCommandEncoder>) commandEncoder endEncoding];
 }
 
-void MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, MTLLoadAction loadAction, MTLStoreAction storeAction, MTLClearColor clearColor, void *texture) {
-    ((MTLRenderPassDescriptor *) passDescriptor).colorAttachments[0].loadAction = loadAction;
-    ((MTLRenderPassDescriptor *) passDescriptor).colorAttachments[0].storeAction = storeAction;
-    ((MTLRenderPassDescriptor *) passDescriptor).colorAttachments[0].clearColor = clearColor;
-    ((MTLRenderPassDescriptor *) passDescriptor).colorAttachments[0].texture = (id<MTLTexture>) texture;
+void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *ps) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setRenderPipelineState:(id<MTLRenderPipelineState>)ps];
+}
+
+void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vertexBuffer, int offset, int atIndex) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setVertexBuffer:(id<MTLBuffer>)vertexBuffer offset:offset atIndex:atIndex];
+}
+
+void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int start, int count) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder drawPrimitives:primitiveType vertexStart:start vertexCount:count];
+}
+
+void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset) {    
+    [(id<MTLRenderCommandEncoder>) commandEncoder drawIndexedPrimitives:primitiveType indexCount:indexCount indexType:indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:indexBufferOffset];
+}
+
+void *MTLRenderPipelineDescriptor_colorAttachments(void *pdesc, int idx) {
+    //returns MTLRenderPipelineColorAttachmentDescriptor *
+    return ((MTLRenderPipelineDescriptor *) pdesc).colorAttachments[idx];
+}
+
+void colorAttachments_set_pixelFormat(void *cad, MTLPixelFormat pixelFormat) {
+    ((MTLRenderPipelineColorAttachmentDescriptor *)cad).pixelFormat = pixelFormat; 
+}
+
+void *MTLRenderPassDescriptor_colorAttachments(void *rpdesc, int idx) {
+    //returns MTLRenderPassColorAttachmentDescriptor *
+    return ((MTLRenderPassDescriptor *) rpdesc).colorAttachments[idx];
+}
+
+void colorAttachments_set_loadAction(void *cad, MTLLoadAction loadAction) {
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).loadAction = loadAction; 
+}
+
+void colorAttachments_set_storeAction(void *cad, MTLStoreAction storeAction) {
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).storeAction = storeAction;
+}
+
+void colorAttachments_set_clearColor(void *cad, MTLClearColor clearColor) {
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).clearColor = clearColor;    
+}
+
+void colorAttachments_set_texture(void *cad, void *texture) {
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).texture = (id<MTLTexture>) texture;
+}
+
+void *MTLRenderPipelineDescriptor_new() {
+    return (MTLRenderPipelineDescriptor *) [MTLRenderPipelineDescriptor new];
+}
+
+void MTLRenderPipelineDescriptor_set_vertexFunction(void *pdesc, void *fn) {
+    ((MTLRenderPipelineDescriptor *) pdesc).vertexFunction = (id<MTLFunction>) fn;
+}
+
+void MTLRenderPipelineDescriptor_set_fragmentFunction(void *pdesc, void *fn) {
+    ((MTLRenderPipelineDescriptor *) pdesc).fragmentFunction = (id<MTLFunction>) fn;
 }
 
 @implementation Renderer
