@@ -12,20 +12,25 @@ void *MTLDevice_newRenderPipelineStateWithDescriptor(void *device, void *pipelin
 void *MTLDevice_newBufferWithBytes(void *device, void *data, int length, MTLResourceOptions options);
 void *MTLDevice_newBufferWithVectors(void *device, vector_float4 vertices[], int length, MTLResourceOptions options);
 void *MTLDevice_newBufferWithInts(void *device, uint16_t vertices[], int length, MTLResourceOptions options);
+void *MTLDevice_newDepthStencilStateWithDescriptor(void *device, void *stencilDescriptor);
 void *MTLLibrary_newFunctionWithName(void *library, char *name);
 void *MTLCommandQueue_commandBuffer(void *commandQueue);
 void *MTLCommandBuffer_renderCommandEncoderWithDescriptor(void *commandBuffer, void *passDescriptor);
 void MTLCommandBuffer_presentDrawable(void *commandBuffer, void *drawable);
 void MTLCommandBuffer_commit(void *commandBuffer);
 void MTLRenderCommandEncoder_endEncoding(void *commandEncoder);
-void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *ps);
+void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *pipelineState);
+void MTLRenderCommandEncoder_setDepthStencilState(void *commandEncoder, void *depthStencilState);
 void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vb, int offset, int atIndex);
 void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveType type, int start, int count);
 void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset);
+void MTLRenderCommandEncoder_setFrontFacingWinding(void *commandEncoder, MTLWinding winding);
+void MTLRenderCommandEncoder_setCullMode(void *commandEncoder, MTLCullMode cullmode);
 
 void *MTLRenderPipelineDescriptor_new();
 void MTLRenderPipelineDescriptor_set_vertexFunction(void *pdesc, void *fn);
 void MTLRenderPipelineDescriptor_set_fragmentFunction(void *pdesc, void *fn);
+void MTLRenderPipelineDescriptor_set_depthAttachmentPixelFormat(void *pdesc, MTLPixelFormat pixelFormat);
 
 void *MTLRenderPassDescriptor_colorAttachments(void *passDescriptor, int idx);
 void colorAttachments_set_loadAction(void *cad, MTLLoadAction loadAction);
@@ -35,3 +40,7 @@ void colorAttachments_set_texture(void *cad, void *texture);
 
 void *MTLRenderPipelineDescriptor_colorAttachments(void *pdesc, int ids);
 void colorAttachments_set_pixelFormat(void *cad, MTLPixelFormat pixelFormat);
+
+void *MTLDepthStencilDescriptor_new();
+void MTLDepthStencilDescriptor_set_depthCompareFunction(void *dsdesc, MTLCompareFunction dcfun);
+void MTLDepthStencilDescriptor_set_depthWriteEnabled(void *dsdesc, bool enabled);

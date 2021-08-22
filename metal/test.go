@@ -94,14 +94,23 @@ func (s *MTLDevice) NewBufferWithInts(vertices []Uint16, options MTLResourceOpti
 	return &MTLBuffer{ptr, len(vertices)}
 }
 
-type MTLBuffer struct {
-	ptr   unsafe.Pointer
-	Count int
-}
-
 func (s *MTLDevice) NewRenderPipelineStateWithDescriptor(pipelineDescriptor *MTLRenderPipelineDescriptor) *MTLRenderPipelineState {
 	ptr := C.MTLDevice_newRenderPipelineStateWithDescriptor(s.ptr, pipelineDescriptor.ptr)
 	return &MTLRenderPipelineState{ptr}
+}
+
+func (s *MTLDevice) NewDepthStencilStateWithDescriptor(stencilDescriptor *MTLDepthStencilDescriptor) *MTLDepthStencilState {
+	ptr := C.MTLDevice_newDepthStencilStateWithDescriptor(s.ptr, stencilDescriptor.ptr)
+	return &MTLDepthStencilState{ptr}
+}
+
+type MTLDepthStencilState struct {
+	ptr unsafe.Pointer
+}
+
+type MTLBuffer struct {
+	ptr   unsafe.Pointer
+	Count int
 }
 
 type MTLRenderPipelineState struct {
@@ -155,6 +164,18 @@ func (s *MTLRenderCommandEncoder) SetRenderPipelineState(ps *MTLRenderPipelineSt
 	C.MTLRenderCommandEncoder_setRenderPipelineState(s.ptr, ps.ptr)
 }
 
+func (s *MTLRenderCommandEncoder) SetDepthStencilState(dss *MTLDepthStencilState) {
+	C.MTLRenderCommandEncoder_setDepthStencilState(s.ptr, dss.ptr)
+}
+
+func (s *MTLRenderCommandEncoder) SetFrontFacingWinding(winding MTLWinding) {
+	C.MTLRenderCommandEncoder_setFrontFacingWinding(s.ptr, C.MTLWinding(winding))
+}
+
+func (s *MTLRenderCommandEncoder) SetCullMode(cullmode MTLCullMode) {
+	C.MTLRenderCommandEncoder_setCullMode(s.ptr, C.MTLCullMode(cullmode))
+}
+
 func (s *MTLRenderCommandEncoder) SetVertexBuffer(ps *MTLBuffer, offset int, atIndex int) {
 	C.MTLRenderCommandEncoder_setVertexBuffer(s.ptr, ps.ptr, C.int(offset), C.int(atIndex))
 }
@@ -195,6 +216,10 @@ func (s *MTLRenderPipelineDescriptor) SetFragmentFunction(fn *MTLFunction) {
 	C.MTLRenderPipelineDescriptor_set_fragmentFunction(s.ptr, fn.ptr)
 }
 
+func (s *MTLRenderPipelineDescriptor) SetDepthAttachmentPixelFormat(pixelFormat MTLPixelFormat) {
+	C.MTLRenderPipelineDescriptor_set_depthAttachmentPixelFormat(s.ptr, C.MTLPixelFormat(pixelFormat))
+}
+
 type MTLRenderPipelineColorAttachmentDescriptor struct {
 	ptr unsafe.Pointer
 }
@@ -213,6 +238,23 @@ func NewMTLRenderPipelineDescriptor() *MTLRenderPipelineDescriptor {
 	return &MTLRenderPipelineDescriptor{ptr}
 }
 
+type MTLDepthStencilDescriptor struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLDepthStencilDescriptor) SetDepthCompareFunction(depthCompareFunction MTLCompareFunction) {
+	C.MTLDepthStencilDescriptor_set_depthCompareFunction(s.ptr, C.MTLCompareFunction(depthCompareFunction))
+}
+
+func (s *MTLDepthStencilDescriptor) SetDepthWriteEnabled(enabled bool) {
+	C.MTLDepthStencilDescriptor_set_depthWriteEnabled(s.ptr, C._Bool(enabled))
+}
+
+func NewMTLDepthStencilDescriptor() *MTLDepthStencilDescriptor {
+	ptr := C.MTLDepthStencilDescriptor_new()
+	return &MTLDepthStencilDescriptor{ptr}
+}
+
 type (
 	MTLLoadAction      C.MTLLoadAction
 	MTLStoreAction     C.MTLStoreAction
@@ -223,6 +265,9 @@ type (
 	MTLResourceOptions C.MTLResourceOptions
 	MTLPrimitiveType   C.MTLPrimitiveType
 	MTLIndexType       C.MTLIndexType
+	MTLCompareFunction C.MTLCompareFunction
+	MTLWinding         C.MTLWinding
+	MTLCullMode        C.MTLCullMode
 )
 
 type MTLClearColor struct {
@@ -233,11 +278,17 @@ type MTLClearColor struct {
 }
 
 const (
-	MTLPixelFormatBGRA8Unorm MTLPixelFormat   = C.MTLPixelFormatBGRA8Unorm
-	MTLLoadActionClear       MTLLoadAction    = C.MTLLoadActionClear
-	MTLStoreActionStore      MTLStoreAction   = C.MTLStoreActionStore
-	MTLPrimitiveTypeTriangle MTLPrimitiveType = C.MTLPrimitiveTypeTriangle
-	MTLIndexTypeUInt16       MTLIndexType     = C.MTLIndexTypeUInt16
+	MTLPixelFormatBGRA8Unorm   MTLPixelFormat = C.MTLPixelFormatBGRA8Unorm
+	MTLPixelFormatDepth32Float MTLPixelFormat = C.MTLPixelFormatDepth32Float
+
+	MTLLoadActionClear       MTLLoadAction      = C.MTLLoadActionClear
+	MTLStoreActionStore      MTLStoreAction     = C.MTLStoreActionStore
+	MTLPrimitiveTypeTriangle MTLPrimitiveType   = C.MTLPrimitiveTypeTriangle
+	MTLIndexTypeUInt16       MTLIndexType       = C.MTLIndexTypeUInt16
+	MTLCompareFunctionLess   MTLCompareFunction = C.MTLCompareFunctionLess
+
+	MTLWindingCounterClockwise MTLWinding  = C.MTLWindingCounterClockwise
+	MTLCullModeBack            MTLCullMode = C.MTLCullModeBack
 
 	MTLResourceCPUCacheModeDefaultCache = C.MTLResourceCPUCacheModeDefaultCache
 )

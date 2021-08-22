@@ -10,14 +10,15 @@ import (
 )
 
 var (
-	device        *metal.MTLDevice
-	library       *metal.MTLLibrary
-	commandQueue  *metal.MTLCommandQueue
-	metalLayer    *metal.CAMetalLayer
-	pipeline      *metal.MTLRenderPipelineState
-	vertexBuffer  *metal.MTLBuffer
-	indexBuffer   *metal.MTLBuffer
-	uniformBuffer *metal.MTLBuffer
+	device            *metal.MTLDevice
+	library           *metal.MTLLibrary
+	commandQueue      *metal.MTLCommandQueue
+	metalLayer        *metal.CAMetalLayer
+	pipeline          *metal.MTLRenderPipelineState
+	vertexBuffer      *metal.MTLBuffer
+	indexBuffer       *metal.MTLBuffer
+	uniformBuffer     *metal.MTLBuffer
+	depthStencilState *metal.MTLDepthStencilState
 )
 
 type uniforms struct {
@@ -45,7 +46,7 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 			{1, 0, 0, 0},
 			{0, 1, 0, 0},
 			{0, 0, 1, 0},
-			{0, 0, 0, 1},
+			{0, 0, 0, 3},
 		},
 	}
 
@@ -61,22 +62,25 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 func initDelegate(view *metal.MTKView) {
 	device = view.Device()
 	metalLayer = view.Layer()
-	commandQueue = device.NewCommandQueue()
 
 	vertexBuffer, indexBuffer, uniformBuffer = makeBuffers()
 
-	vertexFunc := library.NewFunctionWithName("vertex_project")
-	fragmentFunc := library.NewFunctionWithName("fragment_flatcolor")
-
 	pipelineDescriptor := metal.NewMTLRenderPipelineDescriptor()
-	pipelineDescriptor.SetVertexFunction(vertexFunc)
-	pipelineDescriptor.SetFragmentFunction(fragmentFunc)
+	pipelineDescriptor.SetVertexFunction(library.NewFunctionWithName("vertex_project"))
+	pipelineDescriptor.SetFragmentFunction(library.NewFunctionWithName("fragment_flatcolor"))
 	pipelineDescriptor.ColorAttachment(0).SetPixelFormat(metal.MTLPixelFormatBGRA8Unorm)
-	// pipelineDescriptor.SetDepthAttachmentPixelFormat(metal.MTLPixelFormatDepth32Float)
+	pipelineDescriptor.SetDepthAttachmentPixelFormat(metal.MTLPixelFormatDepth32Float)
+
+	depthStencilDescriptor := metal.NewMTLDepthStencilDescriptor()
+	depthStencilDescriptor.SetDepthCompareFunction(metal.MTLCompareFunctionLess)
+	depthStencilDescriptor.SetDepthWriteEnabled(true)
+	depthStencilState = device.NewDepthStencilStateWithDescriptor(depthStencilDescriptor)
 
 	pipeline = device.NewRenderPipelineStateWithDescriptor(pipelineDescriptor)
 
-	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, vertexFunc, fragmentFunc, "pipeline:", pipeline)
+	commandQueue = device.NewCommandQueue()
+
+	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, "pipeline:", pipeline)
 }
 
 func drawDelegate(view *metal.MTKView) {
@@ -97,19 +101,20 @@ func drawDelegate(view *metal.MTKView) {
 
 	commandEncoder.SetRenderPipelineState(pipeline)
 
-	//[commandEncoder setDepthStencilState:self.depthStencilState];
-	//[commandEncoder setFrontFacingWinding:MTLWindingCounterClockwise];
-	//[commandEncoder setCullMode:MTLCullModeBack];
+	commandEncoder.SetDepthStencilState(depthStencilState)
+	commandEncoder.SetFrontFacingWinding(metal.MTLWindingCounterClockwise)
+	commandEncoder.SetCullMode(metal.MTLCullModeBack)
 
 	commandEncoder.SetVertexBuffer(vertexBuffer, 0, 0)
 	commandEncoder.SetVertexBuffer(uniformBuffer, 0, 1)
 	commandEncoder.DrawIndexedPrimitives(metal.MTLPrimitiveTypeTriangle, indexBuffer.Count, metal.MTLIndexTypeUInt16, indexBuffer, 0)
 
 	commandEncoder.EndEncoding()
+
 	commandBuffer.PresentDrawable(drawable)
 	commandBuffer.Commit()
 
-	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture, commandEncoder)
+	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture, commandEncoder, depthStencilState)
 }
 
 func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, error) {

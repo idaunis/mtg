@@ -56,6 +56,10 @@ void *MTLDevice_newBufferWithInts(void *device, uint16_t vertices[], int length,
     return (id<MTLBuffer>) [(id<MTLDevice>)device newBufferWithBytes:vertices length:length options:options];
 }
 
+void *MTLDevice_newDepthStencilStateWithDescriptor(void *device, void *stencilDescriptor) {
+    return (id<MTLDepthStencilState>) [(id<MTLDevice>)device newDepthStencilStateWithDescriptor:(MTLDepthStencilDescriptor *)stencilDescriptor];
+}
+
 void *MTLLibrary_newFunctionWithName(void *library, char *name) {
     NSString *nsName = [NSString stringWithUTF8String:name];
     return (id<MTLFunction>) [(id<MTLLibrary>)library newFunctionWithName:nsName];
@@ -81,8 +85,20 @@ void MTLRenderCommandEncoder_endEncoding(void *commandEncoder) {
     [(id<MTLRenderCommandEncoder>) commandEncoder endEncoding];
 }
 
-void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *ps) {
-    [(id<MTLRenderCommandEncoder>) commandEncoder setRenderPipelineState:(id<MTLRenderPipelineState>)ps];
+void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *pipelineState) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setRenderPipelineState:(id<MTLRenderPipelineState>)pipelineState];
+}
+
+void MTLRenderCommandEncoder_setDepthStencilState(void *commandEncoder, void *depthStencilState) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setDepthStencilState:(id<MTLDepthStencilState>)depthStencilState];
+}
+
+void MTLRenderCommandEncoder_setFrontFacingWinding(void *commandEncoder, MTLWinding winding) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setFrontFacingWinding:winding];
+}
+
+void MTLRenderCommandEncoder_setCullMode(void *commandEncoder, MTLCullMode cullmode) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setCullMode:cullmode];
 }
 
 void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vertexBuffer, int offset, int atIndex) {
@@ -137,6 +153,22 @@ void MTLRenderPipelineDescriptor_set_vertexFunction(void *pdesc, void *fn) {
 
 void MTLRenderPipelineDescriptor_set_fragmentFunction(void *pdesc, void *fn) {
     ((MTLRenderPipelineDescriptor *) pdesc).fragmentFunction = (id<MTLFunction>) fn;
+}
+
+void MTLRenderPipelineDescriptor_set_depthAttachmentPixelFormat(void *pdesc, MTLPixelFormat pixelFormat) {
+    ((MTLRenderPipelineDescriptor *) pdesc).depthAttachmentPixelFormat = pixelFormat;
+}
+
+void *MTLDepthStencilDescriptor_new() {
+    return (MTLDepthStencilDescriptor *) [MTLDepthStencilDescriptor new];
+}
+
+void MTLDepthStencilDescriptor_set_depthCompareFunction(void *dsdesc, MTLCompareFunction dcfun) {
+    ((MTLDepthStencilDescriptor *) dsdesc).depthCompareFunction = dcfun;
+}
+
+void MTLDepthStencilDescriptor_set_depthWriteEnabled(void *dsdesc, bool enabled) {
+    ((MTLDepthStencilDescriptor *) dsdesc).depthWriteEnabled = enabled;
 }
 
 @implementation Renderer
