@@ -1,5 +1,8 @@
 #include <MetalKit/MetalKit.h>
+#include <simd/SIMD.h>
 
+matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_float4 z, vector_float4 w);
+matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b);
 void *CAMetalLayer_nextDrawable(void *metalLayer);
 void *MTKView_currentRenderPassDescriptor(void *view);
 void *MTKView_device(void *view);
@@ -44,3 +47,5 @@ void colorAttachments_set_pixelFormat(void *cad, MTLPixelFormat pixelFormat);
 void *MTLDepthStencilDescriptor_new();
 void MTLDepthStencilDescriptor_set_depthCompareFunction(void *dsdesc, MTLCompareFunction dcfun);
 void MTLDepthStencilDescriptor_set_depthWriteEnabled(void *dsdesc, bool enabled);
+
+void *MTLBuffer_contents(void *buffer);

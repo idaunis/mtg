@@ -7,6 +7,15 @@
 void renderDrawInMTKView(MTKView *);
 void renderInitWithMetalKitView(MTKView *);
 
+matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_float4 z, vector_float4 w) {
+    matrix_float4x4 mat = {x, y, z, w};
+    return mat;
+}
+
+matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b) {
+    return matrix_multiply(a, b);
+}
+
 void *CAMetalLayer_nextDrawable(void *metalLayer) {
     return (id<CAMetalDrawable>) [(CAMetalLayer *)metalLayer nextDrawable];
 }
@@ -169,6 +178,10 @@ void MTLDepthStencilDescriptor_set_depthCompareFunction(void *dsdesc, MTLCompare
 
 void MTLDepthStencilDescriptor_set_depthWriteEnabled(void *dsdesc, bool enabled) {
     ((MTLDepthStencilDescriptor *) dsdesc).depthWriteEnabled = enabled;
+}
+
+void *MTLBuffer_contents(void *buffer) {
+    return ((id<MTLBuffer>) buffer).contents;
 }
 
 @implementation Renderer

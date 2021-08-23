@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"unsafe"
 
 	"test/metal"
@@ -40,23 +41,30 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	indices := []metal.Uint16{
 		3, 2, 6, 6, 7, 3, 4, 5, 1, 1, 0, 4, 4, 0, 3, 3, 7, 4, 1, 5, 6, 6, 2, 1, 0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7,
 	}
-
 	uniforms := uniforms{
-		modelViewProjectionMatrix: metal.Matrix_float4x4{
-			{1, 0, 0, 0},
-			{0, 1, 0, 0},
-			{0, 0, 1, 0},
-			{0, 0, 0, 3},
-		},
+		modelViewProjectionMatrix: metal.NewMatrix_float4x4(
+			[]metal.Vector_float4{
+				{1, 0, 0, 0},
+				{0, 1, 0, 0},
+				{0, 0, 1, 0},
+				{0, 0, 0, 1},
+			},
+		),
 	}
 
 	size := unsafe.Sizeof(uniforms)
 	b := (*[1 << 30]byte)(unsafe.Pointer(&uniforms))[0:size]
-	fmt.Println("***", b)
+
+	alignedUniformsSize := align256(size)
+	fmt.Println("***", b, size, alignedUniformsSize)
 
 	return device.NewBufferWithVectors2(vertices, metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithInts(indices, metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 1, metal.MTLResourceCPUCacheModeDefaultCache)
+}
+
+func align256(size uintptr) uintptr {
+	return uintptr((int(size) + 0xFF) & -0x100)
 }
 
 func initDelegate(view *metal.MTKView) {
@@ -83,9 +91,48 @@ func initDelegate(view *metal.MTKView) {
 	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, "pipeline:", pipeline)
 }
 
+var (
+	time      float32
+	rotationX float32
+	rotationY float32
+)
+
+func updateUniforms(view *metal.MTKView) {
+	duration := float32(1) / 60
+	time += duration
+	rotationX += duration * (math.Pi / 2)
+	rotationY += duration * (math.Pi / 3)
+	scaleFactor := float32(math.Sin(5*float64(time)))*0.25 + 1
+	xAxis := metal.Vector_float3{1, 0, 0}
+	yAxis := metal.Vector_float3{0, 1, 0}
+	xRot := metal.Matrix_float4x4_rotation(xAxis, rotationX)
+	yRot := metal.Matrix_float4x4_rotation(yAxis, rotationY)
+
+	scale := metal.Matrix_float4x4_uniform_scale(scaleFactor)
+
+	modelMatrix := metal.Matrix_multiply(metal.Matrix_multiply(xRot, yRot), scale)
+	cameraTranslation := metal.Vector_float3{0, 0, -5}
+	viewMatrix := metal.Matrix_float4x4_translation(cameraTranslation)
+
+	aspect := float32(640) / 480
+	fov := float32((2 * math.Pi) / 5)
+	near := float32(1)
+	far := float32(100)
+
+	projectionMatrix := metal.Matrix_float4x4_perspective(aspect, fov, near, far)
+
+	uniforms := uniforms{
+		modelViewProjectionMatrix: metal.Matrix_multiply(projectionMatrix, metal.Matrix_multiply(viewMatrix, modelMatrix)),
+	}
+
+	uniformBuffer.ContentsCopy(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 0)
+}
+
 func drawDelegate(view *metal.MTKView) {
 	drawable := metalLayer.NextDrawable()
 	texture := drawable.Texture()
+
+	updateUniforms(view)
 
 	renderPassDescriptor := view.CurrentRenderPassDescriptor()
 
@@ -93,7 +140,7 @@ func drawDelegate(view *metal.MTKView) {
 		Texture:     texture,
 		LoadAction:  metal.MTLLoadActionClear,
 		StoreAction: metal.MTLStoreActionStore,
-		ClearColor:  metal.MTLClearColor{Red: 1, Green: 1, Blue: 0, Alpha: 1},
+		ClearColor:  metal.MTLClearColor{Red: 0.1, Green: .1, Blue: .2, Alpha: 1},
 	})
 
 	commandBuffer := commandQueue.CommandBuffer()
@@ -113,8 +160,6 @@ func drawDelegate(view *metal.MTKView) {
 
 	commandBuffer.PresentDrawable(drawable)
 	commandBuffer.Commit()
-
-	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture, commandEncoder, depthStencilState)
 }
 
 func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, error) {

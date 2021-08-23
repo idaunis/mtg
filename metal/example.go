@@ -45,7 +45,8 @@ void *Window() {
                          initWithFrame: [view frame]
                                 device: MTLCreateSystemDefaultDevice()];
 
-    mtkView.enableSetNeedsDisplay = YES;
+    // mtkView.enableSetNeedsDisplay = NO;
+    // mtkView.preferredFramesPerSecond = 60;
     mtkView.translatesAutoresizingMaskIntoConstraints = false;
     [view addSubview:mtkView];
     [view addConstraints: [NSLayoutConstraint constraintsWithVisualFormat:@"|[mtkView]|"

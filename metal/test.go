@@ -4,6 +4,7 @@ package metal
 #cgo CFLAGS: -x objective-c
 #cgo LDFLAGS: -framework Cocoa -framework Metal -framework MetalKit
 #include "renderer2.h"
+#include <stdio.h>
 */
 import "C"
 
@@ -111,6 +112,14 @@ type MTLDepthStencilState struct {
 type MTLBuffer struct {
 	ptr   unsafe.Pointer
 	Count int
+}
+
+func (s *MTLBuffer) Contents() unsafe.Pointer {
+	return C.MTLBuffer_contents(s.ptr)
+}
+
+func (s *MTLBuffer) ContentsCopy(data unsafe.Pointer, size uintptr, offset uintptr) unsafe.Pointer {
+	return C.memcpy(unsafe.Pointer(uintptr(s.Contents())+offset), data, C.ulong(size))
 }
 
 type MTLRenderPipelineState struct {
@@ -255,11 +264,17 @@ func NewMTLDepthStencilDescriptor() *MTLDepthStencilDescriptor {
 	return &MTLDepthStencilDescriptor{ptr}
 }
 
+func Vector4(a, b, c, d float32) Vector_float4 {
+	return Vector_float4{C.float(a), C.float(b), C.float(c), C.float(d)}
+}
+
 type (
 	MTLLoadAction      C.MTLLoadAction
 	MTLStoreAction     C.MTLStoreAction
 	Vector_float4      C.vector_float4
-	Matrix_float4x4    [4]C.vector_float4
+	Vector_float3      C.vector_float3
+	Matrix_float4x4    C.matrix_float4x4
+	Float              C.float
 	Uint16             C.uint16_t
 	MTLPixelFormat     C.MTLPixelFormat
 	MTLResourceOptions C.MTLResourceOptions
