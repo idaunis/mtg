@@ -105,7 +105,7 @@ var (
 	rotationY float32
 )
 
-func updateUniforms(view *metal.MTKView) {
+func updateUniforms(layer *metal.CAMetalLayer) {
 	duration := float32(1) / 60
 	time += duration
 	rotationX += duration * (math.Pi / 2)
@@ -122,7 +122,7 @@ func updateUniforms(view *metal.MTKView) {
 	cameraTranslation := metal.Vector_float3{0, 0, -5}
 	viewMatrix := metal.Matrix_float4x4_translation(cameraTranslation)
 
-	aspect := view.Layer().DrawableSize().Width / view.Layer().DrawableSize().Height
+	aspect := layer.DrawableSize().Width / layer.DrawableSize().Height
 	fov := float32((2 * math.Pi) / 5)
 	near := float32(1)
 	far := float32(100)
@@ -140,7 +140,7 @@ func drawDelegate(view *metal.MTKView) {
 	drawable := metalLayer.NextDrawable()
 	texture := drawable.Texture()
 
-	updateUniforms(view)
+	updateUniforms(view.Layer())
 
 	renderPassDescriptor := view.CurrentRenderPassDescriptor()
 
