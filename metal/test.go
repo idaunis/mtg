@@ -21,6 +21,16 @@ func (s *CAMetalLayer) NextDrawable() *CAMetalDrawable {
 	return &CAMetalDrawable{ptr}
 }
 
+func (s *CAMetalLayer) DrawableSize() CGSize {
+	size := C.CAMetalLayer_drawableSize(s.ptr)
+	return CGSize{float32(size.width), float32(size.height)}
+}
+
+type CGSize struct {
+	Width  float32
+	Height float32
+}
+
 type CAMetalDrawable struct {
 	ptr unsafe.Pointer
 }
@@ -68,7 +78,7 @@ func (s *MTLDevice) NewLibraryWithSource(source string) *MTLLibrary {
 }
 
 func (s *MTLDevice) NewBufferWithBytes(data unsafe.Pointer, size uintptr, count int, options MTLResourceOptions) *MTLBuffer {
-	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, data, C.int(size), C.MTLResourceOptions(options))
+	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, data, C.int(size)*C.int(count), C.MTLResourceOptions(options))
 	return &MTLBuffer{ptr, count}
 }
 

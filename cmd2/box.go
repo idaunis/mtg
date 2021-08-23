@@ -39,8 +39,14 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	}
 
 	indices := []metal.Uint16{
-		3, 2, 6, 6, 7, 3, 4, 5, 1, 1, 0, 4, 4, 0, 3, 3, 7, 4, 1, 5, 6, 6, 2, 1, 0, 1, 2, 2, 3, 0, 7, 6, 5, 5, 4, 7,
+		3, 2, 6, 6, 7, 3,
+		4, 5, 1, 1, 0, 4,
+		4, 0, 3, 3, 7, 4,
+		1, 5, 6, 6, 2, 1,
+		0, 1, 2, 2, 3, 0,
+		7, 6, 5, 5, 4, 7,
 	}
+
 	uniforms := uniforms{
 		modelViewProjectionMatrix: metal.NewMatrix_float4x4(
 			[]metal.Vector_float4{
@@ -54,12 +60,14 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 
 	size := unsafe.Sizeof(uniforms)
 	b := (*[1 << 30]byte)(unsafe.Pointer(&uniforms))[0:size]
-
 	alignedUniformsSize := align256(size)
 	fmt.Println("***", b, size, alignedUniformsSize)
 
+	fmt.Println("***", unsafe.Sizeof(indices[0])*uintptr(len(indices)))
+
 	return device.NewBufferWithVectors2(vertices, metal.MTLResourceCPUCacheModeDefaultCache),
-		device.NewBufferWithInts(indices, metal.MTLResourceCPUCacheModeDefaultCache),
+		// device.NewBufferWithInts(indices, metal.MTLResourceCPUCacheModeDefaultCache),
+		device.NewBufferWithBytes(unsafe.Pointer(&indices[0]), unsafe.Sizeof(indices[0]), len(indices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 1, metal.MTLResourceCPUCacheModeDefaultCache)
 }
 
@@ -114,7 +122,7 @@ func updateUniforms(view *metal.MTKView) {
 	cameraTranslation := metal.Vector_float3{0, 0, -5}
 	viewMatrix := metal.Matrix_float4x4_translation(cameraTranslation)
 
-	aspect := float32(640) / 480
+	aspect := view.Layer().DrawableSize().Width / view.Layer().DrawableSize().Height
 	fov := float32((2 * math.Pi) / 5)
 	near := float32(1)
 	far := float32(100)

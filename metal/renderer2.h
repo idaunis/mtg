@@ -4,6 +4,7 @@
 matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_float4 z, vector_float4 w);
 matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b);
 void *CAMetalLayer_nextDrawable(void *metalLayer);
+CGSize CAMetalLayer_drawableSize(void *metalLayer);
 void *MTKView_currentRenderPassDescriptor(void *view);
 void *MTKView_device(void *view);
 void *MTKView_layer(void *view);

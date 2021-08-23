@@ -20,6 +20,10 @@ void *CAMetalLayer_nextDrawable(void *metalLayer) {
     return (id<CAMetalDrawable>) [(CAMetalLayer *)metalLayer nextDrawable];
 }
 
+CGSize CAMetalLayer_drawableSize(void *metalLayer) {
+    return ((CAMetalLayer *)metalLayer).drawableSize;
+}
+
 void *MTKView_currentRenderPassDescriptor(void *view) {
     return (MTLRenderPassDescriptor *) ((MTKView *) view).currentRenderPassDescriptor;
 }
