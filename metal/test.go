@@ -9,6 +9,7 @@ package metal
 import "C"
 
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -78,6 +79,7 @@ func (s *MTLDevice) NewLibraryWithSource(source string) *MTLLibrary {
 }
 
 func (s *MTLDevice) NewBufferWithBytes(data unsafe.Pointer, size uintptr, count int, options MTLResourceOptions) *MTLBuffer {
+	fmt.Println(C.int(size) * C.int(count))
 	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, data, C.int(size)*C.int(count), C.MTLResourceOptions(options))
 	return &MTLBuffer{ptr, count}
 }
@@ -274,8 +276,16 @@ func NewMTLDepthStencilDescriptor() *MTLDepthStencilDescriptor {
 	return &MTLDepthStencilDescriptor{ptr}
 }
 
-func Vector4(a, b, c, d float32) Vector_float4 {
+func Vector4(a, b, c, d float64) Vector_float4 {
 	return Vector_float4{C.float(a), C.float(b), C.float(c), C.float(d)}
+}
+
+func Vector3(a, b, c float64) Vector_float3 {
+	return Vector_float3{C.float(a), C.float(b), C.float(c)}
+}
+
+func Vector2(a, b float64) Vector_float2 {
+	return Vector_float2{C.float(a), C.float(b)}
 }
 
 type (
@@ -283,6 +293,7 @@ type (
 	MTLStoreAction     C.MTLStoreAction
 	Vector_float4      C.vector_float4
 	Vector_float3      C.vector_float3
+	Vector_float2      C.vector_float2
 	Matrix_float4x4    C.matrix_float4x4
 	Float              C.float
 	Uint16             C.uint16_t

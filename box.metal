@@ -2,6 +2,7 @@ using namespace metal;
 
 struct Vertex {
     float4 position [[position]];
+    float4 color; 
 };
 
 struct Uniforms {
@@ -13,10 +14,11 @@ vertex Vertex vertex_project(device Vertex *vertices [[buffer(0)]], constant Uni
 {
     Vertex vertexOut;
     vertexOut.position = uniforms->projectionMatrix * uniforms->modelViewMatrix * vertices[vid].position;
+    vertexOut.color = vertices[vid].color;
     return vertexOut;
 }
 
 fragment half4 fragment_flatcolor(Vertex vertexIn [[stage_in]]) 
 {
-    return half4(float4{1,1,1,1});
+    return half4(vertexIn.color);
 }

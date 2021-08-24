@@ -8,6 +8,7 @@ import (
 	"unsafe"
 
 	"test/metal"
+	"test/obj"
 )
 
 var (
@@ -28,38 +29,12 @@ type uniforms struct {
 }
 
 func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
-	vertices := [][2]metal.Vector_float4{
-		{{-1, 1, 1, 1}, {0, 1, 1, 1}},
-		{{-1, -1, 1, 1}, {0, 0, 1, 1}},
-		{{1, -1, 1, 1}, {1, 0, 1, 1}},
-		{{1, 1, 1, 1}, {1, 1, 1, 1}},
-		{{-1, 1, -1, 1}, {0, 1, 0, 1}},
-		{{-1, -1, -1, 1}, {0, 0, 0, 1}},
-		{{1, -1, -1, 1}, {1, 0, 0, 1}},
-		{{1, 1, -1, 1}, {1, 1, 0, 1}},
-	}
-
-	indices := []metal.Uint16{
-		3, 2, 6, 6, 7, 3,
-		4, 5, 1, 1, 0, 4,
-		4, 0, 3, 3, 7, 4,
-		1, 5, 6, 6, 2, 1,
-		0, 1, 2, 2, 3, 0,
-		7, 6, 5, 5, 4, 7,
-	}
-
 	uniforms := uniforms{}
+	model, _ := obj.Parse("teapot.obj")
+	fmt.Println(model)
 
-	size := unsafe.Sizeof(uniforms)
-	b := (*[1 << 30]byte)(unsafe.Pointer(&uniforms))[0:size]
-	alignedUniformsSize := align256(size)
-	fmt.Println("***", b, size, alignedUniformsSize)
-
-	fmt.Println("***", unsafe.Sizeof(indices[0])*uintptr(len(indices)))
-
-	return device.NewBufferWithVectors2(vertices, metal.MTLResourceCPUCacheModeDefaultCache),
-		// device.NewBufferWithInts(indices, metal.MTLResourceCPUCacheModeDefaultCache),
-		device.NewBufferWithBytes(unsafe.Pointer(&indices[0]), unsafe.Sizeof(indices[0]), len(indices), metal.MTLResourceCPUCacheModeDefaultCache),
+	return device.NewBufferWithBytes(unsafe.Pointer(&model.Vertices[0]), unsafe.Sizeof(model.Vertices), len(model.Vertices), metal.MTLResourceCPUCacheModeDefaultCache),
+		device.NewBufferWithBytes(unsafe.Pointer(&model.Indices[0]), unsafe.Sizeof(model.Indices[0]), len(model.Indices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 1, metal.MTLResourceCPUCacheModeDefaultCache)
 }
 
@@ -111,12 +86,12 @@ func updateUniforms(layer *metal.CAMetalLayer) {
 	scale := metal.Matrix_float4x4_uniform_scale(scaleFactor)
 
 	modelMatrix := metal.Matrix_multiply(metal.Matrix_multiply(xRot, yRot), scale)
-	cameraTranslation := metal.Vector_float3{0, 0, -5}
+	cameraTranslation := metal.Vector_float3{0, 0, -1.5}
 	viewMatrix := metal.Matrix_float4x4_translation(cameraTranslation)
 
 	aspect := layer.DrawableSize().Width / layer.DrawableSize().Height
 	fov := float32((2 * math.Pi) / 5)
-	near := float32(1)
+	near := float32(.1)
 	far := float32(100)
 
 	projectionMatrix := metal.Matrix_float4x4_perspective(aspect, fov, near, far)
@@ -186,7 +161,7 @@ func main() {
 	metal.CreateApp()
 	w := metal.CreateWindow()
 
-	library, err = libraryFromFile(w.Device(), "box.metal")
+	library, err = libraryFromFile(w.Device(), "shaders.metal")
 	if err != nil {
 		fmt.Println(err)
 		return
