@@ -32,6 +32,27 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	uniforms := uniforms{}
 	model, _ := obj.Parse("teapot.obj")
 	fmt.Println(model)
+	/*
+		model.Vertices = []metal.Vector_float4{
+			{-1, 1, 1, 1},
+			{-1, -1, 1, 1},
+			{1, -1, 1, 1},
+			{1, 1, 1, 1},
+			{-1, 1, -1, 1},
+			{-1, -1, -1, 1},
+			{1, -1, -1, 1},
+			{1, 1, -1, 1},
+		}
+
+		model.Indices = []metal.Uint16{
+			3, 2, 6, 6, 7, 3,
+			4, 5, 1, 1, 0, 4,
+			4, 0, 3, 3, 7, 4,
+			1, 5, 6, 6, 2, 1,
+			0, 1, 2, 2, 3, 0,
+			7, 6, 5, 5, 4, 7,
+		}
+	*/
 
 	return device.NewBufferWithBytes(unsafe.Pointer(&model.Vertices[0]), unsafe.Sizeof(model.Vertices), len(model.Vertices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&model.Indices[0]), unsafe.Sizeof(model.Indices[0]), len(model.Indices), metal.MTLResourceCPUCacheModeDefaultCache),
@@ -77,7 +98,7 @@ func updateUniforms(layer *metal.CAMetalLayer) {
 	time += duration
 	rotationX += duration * (math.Pi / 2)
 	rotationY += duration * (math.Pi / 3)
-	scaleFactor := float32(math.Sin(5*float64(time)))*0.25 + 1
+	scaleFactor := float32(1)
 	xAxis := metal.Vector_float3{1, 0, 0}
 	yAxis := metal.Vector_float3{0, 1, 0}
 	xRot := metal.Matrix_float4x4_rotation(xAxis, rotationX)
@@ -86,7 +107,7 @@ func updateUniforms(layer *metal.CAMetalLayer) {
 	scale := metal.Matrix_float4x4_uniform_scale(scaleFactor)
 
 	modelMatrix := metal.Matrix_multiply(metal.Matrix_multiply(xRot, yRot), scale)
-	cameraTranslation := metal.Vector_float3{0, 0, -1.5}
+	cameraTranslation := metal.Vector_float3{0, 0, -5}
 	viewMatrix := metal.Matrix_float4x4_translation(cameraTranslation)
 
 	aspect := layer.DrawableSize().Width / layer.DrawableSize().Height

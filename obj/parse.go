@@ -36,7 +36,7 @@ func Parse(filename string) (*Model, error) {
 			x, _ := strconv.ParseFloat(tokens[1], 32)
 			y, _ := strconv.ParseFloat(tokens[2], 32)
 			z, _ := strconv.ParseFloat(tokens[3], 32)
-			m.Vertices = append(m.Vertices, metal.Vector4(x, y, z, 0))
+			m.Vertices = append(m.Vertices, metal.Vector4(x, y, z, 1))
 		case "vt":
 			x, _ := strconv.ParseFloat(tokens[1], 32)
 			y, _ := strconv.ParseFloat(tokens[2], 32)
@@ -60,13 +60,13 @@ func Parse(filename string) (*Model, error) {
 					m.TexIndices = append(m.Indices, metal.Uint16(vt))
 				case 3:
 					vi, _ := strconv.Atoi(v[0])
-					m.Indices = append(m.Indices, metal.Uint16(vi))
+					m.Indices = append(m.Indices, metal.Uint16(vi-1))
 					if v[1] != "" {
 						vt, _ := strconv.Atoi(v[1])
 						m.TexIndices = append(m.Indices, metal.Uint16(vt))
 					}
 					vn, _ := strconv.Atoi(v[2])
-					m.NormalIndices = append(m.NormalIndices, metal.Uint16(vn))
+					m.NormalIndices = append(m.NormalIndices, metal.Uint16(vn-1))
 				}
 			}
 		}

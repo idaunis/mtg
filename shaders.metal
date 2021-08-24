@@ -18,5 +18,5 @@ vertex Vertex vertex_project(device Vertex *vertices [[buffer(0)]], constant Uni
 
 fragment half4 fragment_flatcolor(Vertex vertexIn [[stage_in]]) 
 {
-    return half4(float4{1,1,1,1});
+    return half4(float4{1,0,0,1});
 }
