@@ -7,6 +7,26 @@
 void renderDrawInMTKView(MTKView *);
 void renderInitWithMetalKitView(MTKView *);
 
+vector_float2 new_vector_float2(float x, float y) {
+    return vector2(x, y);
+}
+
+vector_float3 new_vector_float3(float x, float y, float z) {
+    return vector3(x, y, z);
+}
+
+vector_float4 new_vector_float4(float x, float y, float z, float w) {
+    return vector4(x, y, z, w);
+}
+
+matrix_float3x3 new_matrix_float3x3(float *x, float *y, float *z) {
+    // NSLog(@"x: %f %f %f", x[0], x[1], x[2]);
+    // NSLog(@"y: %f %f %f", y[0], y[1], y[2]);
+    // NSLog(@"z: %f %f %f", z[0], z[1], z[2]);
+    matrix_float3x3 mat = {vector3(x[0], x[1], x[2]), vector3(y[0], y[1], y[2]), vector3(z[0], z[1], z[2])};
+    return mat;
+}
+
 matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_float4 z, vector_float4 w) {
     matrix_float4x4 mat = {x, y, z, w};
     return mat;
@@ -14,6 +34,17 @@ matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_flo
 
 matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b) {
     return matrix_multiply(a, b);
+}
+
+vector_float3 simd_vector3_cross(vector_float3 x, vector_float3 y) {
+    NSLog(@"cros x: %f %f %f", x[0], x[1], x[2]);
+    NSLog(@"cros y: %f %f %f", y[0], y[1], y[2]);
+    return vector_cross(x, y);
+}
+
+vector_float4 simd_vector4_normalize(vector_float4 x) {
+    NSLog(@"normalize x: %f %f %f %f", x[0], x[1], x[2], x[3]);
+    return vector_normalize(x);
 }
 
 void *CAMetalLayer_nextDrawable(void *metalLayer) {
@@ -26,6 +57,10 @@ CGSize CAMetalLayer_drawableSize(void *metalLayer) {
 
 void *MTKView_currentRenderPassDescriptor(void *view) {
     return (MTLRenderPassDescriptor *) ((MTKView *) view).currentRenderPassDescriptor;
+}
+
+void MTKView_set_depthStencilPixelFormat(void *view, MTLPixelFormat pixelFormat) {
+    ((MTKView *)view).depthStencilPixelFormat = pixelFormat;
 }
 
 void *MTKView_device(void *view) {

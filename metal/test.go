@@ -64,6 +64,10 @@ func (s *MTKView) Layer() *CAMetalLayer {
 	return &CAMetalLayer{ptr}
 }
 
+func (s *MTKView) SetDepthStencilPixelFormat(pixelFormat MTLPixelFormat) {
+	C.MTKView_set_depthStencilPixelFormat(s.ptr, C.MTLPixelFormat(pixelFormat))
+}
+
 type MTLDevice struct {
 	ptr unsafe.Pointer
 }
@@ -277,15 +281,27 @@ func NewMTLDepthStencilDescriptor() *MTLDepthStencilDescriptor {
 }
 
 func Vector4(a, b, c, d float64) Vector_float4 {
-	return Vector_float4{C.float(a), C.float(b), C.float(c), C.float(d)}
+	return Vector_float4(C.new_vector_float4(C.float(a), C.float(b), C.float(c), C.float(d)))
 }
 
 func Vector3(a, b, c float64) Vector_float3 {
-	return Vector_float3{C.float(a), C.float(b), C.float(c)}
+	return Vector_float3(C.new_vector_float3(C.float(a), C.float(b), C.float(c)))
 }
 
 func Vector2(a, b float64) Vector_float2 {
-	return Vector_float2{C.float(a), C.float(b)}
+	return Vector_float2(C.new_vector_float2(C.float(a), C.float(b)))
+}
+
+func (v Vector_float4) XYZ() Vector_float3 {
+	return Vector_float3(C.new_vector_float3(v[0], v[1], v[2]))
+}
+
+func (v Vector_float4) Add(w Vector_float4) Vector_float4 {
+	return Vector_float4(C.new_vector_float4(v[0]+w[0], v[1]+w[1], v[2]+w[2], v[3]+w[3]))
+}
+
+func (v Vector_float3) Diff(w Vector_float3) Vector_float3 {
+	return Vector_float3(C.new_vector_float3(v[0]-w[0], v[1]-w[1], v[2]-w[2]))
 }
 
 type (
@@ -295,6 +311,7 @@ type (
 	Vector_float3      C.vector_float3
 	Vector_float2      C.vector_float2
 	Matrix_float4x4    C.matrix_float4x4
+	Matrix_float3x3    C.matrix_float3x3
 	Float              C.float
 	Uint16             C.uint16_t
 	MTLPixelFormat     C.MTLPixelFormat
@@ -314,8 +331,10 @@ type MTLClearColor struct {
 }
 
 const (
-	MTLPixelFormatBGRA8Unorm   MTLPixelFormat = C.MTLPixelFormatBGRA8Unorm
-	MTLPixelFormatDepth32Float MTLPixelFormat = C.MTLPixelFormatDepth32Float
+	MTLPixelFormatBGRA8Unorm            MTLPixelFormat = C.MTLPixelFormatBGRA8Unorm
+	MTLPixelFormatDepth32Float          MTLPixelFormat = C.MTLPixelFormatDepth32Float
+	MTLPixelFormatInvalid               MTLPixelFormat = C.MTLPixelFormatInvalid
+	MTLPixelFormatDepth32Float_Stencil8 MTLPixelFormat = C.MTLPixelFormatDepth32Float_Stencil8
 
 	MTLLoadActionClear       MTLLoadAction      = C.MTLLoadActionClear
 	MTLStoreActionStore      MTLStoreAction     = C.MTLStoreActionStore
