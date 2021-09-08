@@ -3,7 +3,7 @@ package metal
 /*
 #cgo CFLAGS: -x objective-c
 #cgo LDFLAGS: -framework Cocoa -framework Metal -framework MetalKit
-#include "renderer2.h"
+#include "api.h"
 #include <simd/matrix.h>
 */
 import "C"
@@ -17,7 +17,7 @@ func Matrix_multiply(a Matrix_float4x4, b Matrix_float4x4) Matrix_float4x4 {
 }
 
 func Vector3_cross(a Vector_float3, b Vector_float3) Vector_float3 {
-	return Vector_float3(C.simd_vector3_cross(C.vector_float3(a), C.vector_float3(b)))
+	return Vector_float3(C.simd_vector3_cross(&a[0], &b[0]))
 }
 
 func Vector4_normalize(a Vector_float4) Vector_float4 {

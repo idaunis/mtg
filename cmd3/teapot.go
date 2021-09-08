@@ -38,38 +38,17 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	uniforms := uniforms{}
 	vertices := []vertex{}
 	model, _ := obj.Parse("teapot2.obj")
+	group := model.GetGroup(1)
 
-	model.GetGroup(1).EachVertex(func(p obj.PackedVertex) {
+	// group.GenerateNormals()
+	group.EachVertex(func(p obj.PackedVertex) {
 		vertices = append(vertices, vertex{p.Position, p.Normal})
 	})
-	indices := model.GetGroup(1).Indices
+	indices := group.Indices
 
 	fmt.Println(unsafe.Sizeof(vertices[0]), len(vertices))
 	fmt.Println(unsafe.Sizeof(indices[0]), len(indices))
 	fmt.Println(unsafe.Sizeof(uniforms))
-
-	//fmt.Println(model)
-	/*
-		model.Vertices = []metal.Vector_float4{
-			{-1, 1, 1, 1},
-			{-1, -1, 1, 1},
-			{1, -1, 1, 1},
-			{1, 1, 1, 1},
-			{-1, 1, -1, 1},
-			{-1, -1, -1, 1},
-			{1, -1, -1, 1},
-			{1, 1, -1, 1},
-		}
-
-		model.Indices = []metal.Uint16{
-			3, 2, 6, 6, 7, 3,
-			4, 5, 1, 1, 0, 4,
-			4, 0, 3, 3, 7, 4,
-			1, 5, 6, 6, 2, 1,
-			0, 1, 2, 2, 3, 0,
-			7, 6, 5, 5, 4, 7,
-		}
-	*/
 
 	return device.NewBufferWithBytes(unsafe.Pointer(&vertices[0]), unsafe.Sizeof(vertices[0]), len(vertices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&indices[0]), unsafe.Sizeof(indices[0]), len(indices), metal.MTLResourceCPUCacheModeDefaultCache),
@@ -103,26 +82,6 @@ func initDelegate(view *metal.MTKView) {
 
 	commandQueue = device.NewCommandQueue()
 
-	a := metal.Matrix_float4x4_extract_linear(metal.NewMatrix_float4x4(
-		[]metal.Vector_float4{
-			{1, 0, 0, 0},
-			{0, 1, 0, 0},
-			{0, 0, 1, 0},
-			{0, 0, 0, 1},
-		}))
-
-	fmt.Println(a)
-
-	v4 := metal.Vector4(1, 2, 3, 4)
-	n4 := metal.Vector4_normalize(v4)
-	fmt.Println(n4)
-
-	v1 := metal.Vector3(1, 2, 3)
-	v2 := metal.Vector3(4, 5, 6)
-
-	c1 := metal.Vector3_cross(v1, v2)
-	fmt.Println(v1, v2, c1)
-
 	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, "pipeline:", pipeline)
 }
 
@@ -140,7 +99,6 @@ func updateUniforms(layer *metal.CAMetalLayer) {
 	rotationY += duration * (math.Pi / 3)
 	rotationZ += duration * (math.Pi)
 
-	// rotationY = math.Pi
 	scaleFactor := float32(1)
 	xAxis := metal.Vector_float3{1, 0, 0}
 	yAxis := metal.Vector_float3{0, 1, 0}
@@ -167,15 +125,6 @@ func updateUniforms(layer *metal.CAMetalLayer) {
 	uniforms.modelViewMatrix = metal.Matrix_multiply(viewMatrix, modelMatrix)
 	uniforms.modelViewProjectionMatrix = metal.Matrix_multiply(projectionMatrix, uniforms.modelViewMatrix)
 	uniforms.normalMatrix = metal.Matrix_float4x4_extract_linear(uniforms.modelViewMatrix)
-
-	/*
-		uniforms.normalMatrix = metal.NewMatrix_float3x3(
-			[]metal.Vector_float3{
-				{1, 0, 0},
-				{0, 1, 0},
-				{0, 0, 1},
-			})
-	*/
 
 	uniformBuffer.ContentsCopy(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 0)
 }

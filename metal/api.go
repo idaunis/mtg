@@ -3,7 +3,7 @@ package metal
 /*
 #cgo CFLAGS: -x objective-c
 #cgo LDFLAGS: -framework Cocoa -framework Metal -framework MetalKit
-#include "renderer2.h"
+#include "api.h"
 #include <stdio.h>
 */
 import "C"

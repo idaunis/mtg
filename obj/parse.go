@@ -187,8 +187,6 @@ func Parse(filename string) (*Model, error) {
 		}
 	}
 
-	m.currentGroup.GenerateNormals()
-
 	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
