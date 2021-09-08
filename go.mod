@@ -1,4 +1,4 @@
-module test
+module github.com/idaunis/mtg
 
 go 1.16
 

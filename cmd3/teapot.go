@@ -7,8 +7,8 @@ import (
 	"math"
 	"unsafe"
 
-	"test/metal"
-	"test/obj"
+	"github.com/idaunis/mtg/metal"
+	"github.com/idaunis/mtg/obj"
 )
 
 var (

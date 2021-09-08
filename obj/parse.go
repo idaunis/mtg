@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"test/metal"
+	"github.com/idaunis/mtg/metal"
 )
 
 type Model struct {

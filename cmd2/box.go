@@ -7,7 +7,7 @@ import (
 	"math"
 	"unsafe"
 
-	"test/metal"
+	"github.com/idaunis/mtg/metal"
 )
 
 var (

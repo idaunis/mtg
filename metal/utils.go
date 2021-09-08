@@ -34,7 +34,6 @@ func NewMatrix_float4x4(m []Vector_float4) Matrix_float4x4 {
 }
 
 func NewMatrix_float3x3(m []Vector_float3) Matrix_float3x3 {
-	// fmt.Println("**", m[0], m[1], m[2])
 	// since m[0] is an array of 3 floats we have to pass the location of the initial element
 	return Matrix_float3x3(C.new_matrix_float3x3(
 		&m[0][0],
