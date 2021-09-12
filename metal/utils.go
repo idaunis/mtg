@@ -16,6 +16,10 @@ func Matrix_multiply(a Matrix_float4x4, b Matrix_float4x4) Matrix_float4x4 {
 	return Matrix_float4x4(C.simd_matrix_multiply(C.matrix_float4x4(a), C.matrix_float4x4(b)))
 }
 
+func Vector3_length(a Vector_float3) float32 {
+	return float32(C.simd_vector3_length(&a[0]))
+}
+
 func Vector3_cross(a Vector_float3, b Vector_float3) Vector_float3 {
 	return Vector_float3(C.simd_vector3_cross(&a[0], &b[0]))
 }

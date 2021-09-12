@@ -32,6 +32,10 @@ matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b) {
     return matrix_multiply(a, b);
 }
 
+float simd_vector3_length(float *x) {
+    return vector_length(vector3(x[0], x[1], x[2]));
+}
+
 vector_float3 simd_vector3_cross(float *x, float *y) {
     // NSLog(@"cros x: %f %f %f", x[0], x[1], x[2]);
     // NSLog(@"cros y: %f %f %f", y[0], y[1], y[2]);

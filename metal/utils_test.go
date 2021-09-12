@@ -10,6 +10,9 @@ func TestVector3(t *testing.T) {
 	v1 := Vector3(1, 2, 3)
 	v2 := Vector3(4, 5, 6)
 
+	l1 := Vector3_length(v1)
+	assert.Equal(t, l1, float32(3.7416575))
+
 	c1 := Vector3_cross(v1, v2)
 	assert.Equal(t, c1, Vector3(-3, 6, -3))
 

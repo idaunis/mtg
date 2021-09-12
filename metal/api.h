@@ -7,6 +7,7 @@ vector_float4 new_vector_float4(float x, float y, float z, float w);
 matrix_float3x3 new_matrix_float3x3(float *x, float *y, float *z);
 matrix_float4x4 new_matrix_float4x4(vector_float4 x, vector_float4 y, vector_float4 z, vector_float4 w);
 matrix_float4x4 simd_matrix_multiply(matrix_float4x4 a, matrix_float4x4 b);
+float simd_vector3_length(float *x);
 vector_float3 simd_vector3_cross(float *a, float *b);
 vector_float4 simd_vector4_normalize(vector_float4 a);
 void *CAMetalLayer_nextDrawable(void *metalLayer);
