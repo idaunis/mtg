@@ -95,11 +95,11 @@ var (
 func updateUniforms(layer *metal.CAMetalLayer) {
 	duration := float32(1) / 60
 	time += duration
-	rotationX += duration * (math.Pi / 2)
-	rotationY += duration * (math.Pi / 3)
-	rotationZ += duration * (math.Pi)
+	rotationX += duration * (math.Pi / 4)
+	rotationY += duration * (math.Pi / 5)
+	rotationZ += duration * (math.Pi / 7)
 
-	scaleFactor := float32(1)
+	scaleFactor := float32(1.3)
 	xAxis := metal.Vector_float3{1, 0, 0}
 	yAxis := metal.Vector_float3{0, 1, 0}
 	zAxis := metal.Vector_float3{0, 0, 1}

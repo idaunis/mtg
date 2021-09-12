@@ -71,6 +71,8 @@ func initDelegate(view *metal.MTKView) {
 	device = view.Device()
 	metalLayer = view.Layer()
 
+	view.SetDepthStencilPixelFormat(metal.MTLPixelFormatDepth32Float)
+
 	vertexBuffer, indexBuffer, uniformBuffer = makeBuffers()
 
 	pipelineDescriptor := metal.NewMTLRenderPipelineDescriptor()
