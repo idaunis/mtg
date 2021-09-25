@@ -41,8 +41,53 @@ func (s *CAMetalDrawable) Texture() *MTLTexture {
 	return &MTLTexture{ptr}
 }
 
+type MTLSamplerState struct {
+	ptr unsafe.Pointer
+}
+
+func NewMTLSamplerDescriptor() *MTLSamplerDescriptor {
+	ptr := C.MTLSamplerDescriptor_new()
+	return &MTLSamplerDescriptor{ptr}
+}
+
+type MTLSamplerDescriptor struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLSamplerDescriptor) SetSAddressMode(mode MTLSamplerAddressMode) {
+	C.MTLSamplerDescriptor_setSAddressMode(s.ptr, C.MTLSamplerAddressMode(mode))
+}
+
+func (s *MTLSamplerDescriptor) SetTAddressMode(mode MTLSamplerAddressMode) {
+	C.MTLSamplerDescriptor_setTAddressMode(s.ptr, C.MTLSamplerAddressMode(mode))
+}
+
+func (s *MTLSamplerDescriptor) SetMinFilter(filter MTLSamplerMinMagFilter) {
+	C.MTLSamplerDescriptor_setMinFilter(s.ptr, C.MTLSamplerMinMagFilter(filter))
+}
+
+func (s *MTLSamplerDescriptor) SetMagFilter(filter MTLSamplerMinMagFilter) {
+	C.MTLSamplerDescriptor_setMagFilter(s.ptr, C.MTLSamplerMinMagFilter(filter))
+}
+
+func (s *MTLSamplerDescriptor) SetMipFilter(filter MTLSamplerMipFilter) {
+	C.MTLSamplerDescriptor_setMipFilter(s.ptr, C.MTLSamplerMipFilter(filter))
+}
+
 type MTLTexture struct {
 	ptr unsafe.Pointer
+}
+
+func (s *MTLTexture) SetLabel(label string) {
+	C.MTLTexture_setLabel(s.ptr, C.CString(label))
+}
+
+func (s *MTLTexture) ReplaceRegion(region MTLRegion, minmapLevel int, imageData []byte, bytesPerRow int) {
+	C.MTLTexture_replaceRegion(s.ptr, C.MTLRegion(region), C.int(minmapLevel), unsafe.Pointer(&imageData[0]), C.int(bytesPerRow))
+}
+
+func MTLRegionMake2D(x, y, width, height int) MTLRegion {
+	return MTLRegion(C.MTLRegion_MTLRegionMake2D(C.int(x), C.int(y), C.int(width), C.int(height)))
 }
 
 type MTKView struct {
@@ -121,6 +166,16 @@ func (s *MTLDevice) NewDepthStencilStateWithDescriptor(stencilDescriptor *MTLDep
 	return &MTLDepthStencilState{ptr}
 }
 
+func (s *MTLDevice) NewTextureWithDescriptor(textureDescriptor *MTLTextureDescriptor) *MTLTexture {
+	ptr := C.MTLDevice_newTextureWithDescriptor(s.ptr, textureDescriptor.ptr)
+	return &MTLTexture{ptr}
+}
+
+func (s *MTLDevice) NewSamplerStateWithDescriptor(samplerDescriptor *MTLSamplerDescriptor) *MTLSamplerState {
+	ptr := C.MTLDevice_newSamplerStateWithDescriptor(s.ptr, samplerDescriptor.ptr)
+	return &MTLSamplerState{ptr}
+}
+
 type MTLDepthStencilState struct {
 	ptr unsafe.Pointer
 }
@@ -181,6 +236,38 @@ func (s *MTLCommandBuffer) Commit() {
 	C.MTLCommandBuffer_commit(s.ptr)
 }
 
+func (s *MTLCommandBuffer) WaitUntilCompleted() {
+	C.MTLCommandBuffer_waitUntilCompleted(s.ptr)
+}
+
+func (s *MTLCommandBuffer) BlitCommandEncoder() *MTLBlitCommandEncoder {
+	ptr := C.MTLCommandBuffer_blitCommandEncoder(s.ptr)
+	return &MTLBlitCommandEncoder{ptr}
+}
+
+type MTLCommandBufferHandler func(*MTLCommandBuffer)
+
+//export golangCompleteHandler
+func golangCompleteHandler(fn unsafe.Pointer, cbPtr unsafe.Pointer) {
+	(*(*MTLCommandBufferHandler)(fn))(&MTLCommandBuffer{cbPtr})
+}
+
+func (s *MTLCommandBuffer) AddCompletedHandler(fn MTLCommandBufferHandler) {
+	C.MTLCommandBuffer_addCompletedHandler(s.ptr, unsafe.Pointer(&fn))
+}
+
+type MTLBlitCommandEncoder struct {
+	ptr unsafe.Pointer
+}
+
+func (s *MTLBlitCommandEncoder) GenerateMipmapsForTexture(texture *MTLTexture) {
+	C.MTLBlitCommandEncoder_generateMipmapsForTexture(s.ptr, texture.ptr)
+}
+
+func (s *MTLBlitCommandEncoder) EndEncoding() {
+	C.MTLBlitCommandEncoder_endEncoding(s.ptr)
+}
+
 type MTLRenderCommandEncoder struct {
 	ptr unsafe.Pointer
 }
@@ -213,8 +300,29 @@ func (s *MTLRenderCommandEncoder) DrawIndexedPrimitives(primitiveType MTLPrimiti
 	C.MTLRenderCommandEncoder_drawIndexedPrimitives(s.ptr, C.MTLPrimitiveType(primitiveType), C.int(indexCount), C.MTLIndexType(indexType), indexBuffer.ptr, C.int(indexBufferOffset))
 }
 
+func (s *MTLRenderCommandEncoder) SetFragmentTexture(t *MTLTexture, atIndex int) {
+	C.MTLRenderCommandEncoder_setFragmentTexture(s.ptr, t.ptr, C.int(atIndex))
+}
+
+func (s *MTLRenderCommandEncoder) SetFragmentSamplerState(ss *MTLSamplerState, atIndex int) {
+	C.MTLRenderCommandEncoder_setFragmentSamplerState(s.ptr, ss.ptr, C.int(atIndex))
+}
+
 func (s *MTLRenderCommandEncoder) EndEncoding() {
 	C.MTLRenderCommandEncoder_endEncoding(s.ptr)
+}
+
+type MTLTextureDescriptor struct {
+	ptr unsafe.Pointer
+}
+
+func Texture2DDescriptorWithPixelFormat(pixelFormat MTLPixelFormat, width, height int, minmapped bool) *MTLTextureDescriptor {
+	ptr := C.MTLTextureDescriptor_texture2DDescriptorWithPixelFormat(C.MTLPixelFormat(pixelFormat), C.int(width), C.int(height), C._Bool(minmapped))
+	return &MTLTextureDescriptor{ptr}
+}
+
+func (s *MTLTextureDescriptor) SetUsage(usage MTLTextureUsage) {
+	C.MTLTextureDescriptor_set_usage(s.ptr, C.MTLTextureUsage(usage))
 }
 
 type MTLRenderPassDescriptor struct {
@@ -305,22 +413,27 @@ func (v Vector_float3) Diff(w Vector_float3) Vector_float3 {
 }
 
 type (
-	MTLLoadAction      C.MTLLoadAction
-	MTLStoreAction     C.MTLStoreAction
-	Vector_float4      C.vector_float4
-	Vector_float3      C.vector_float3
-	Vector_float2      C.vector_float2
-	Matrix_float4x4    C.matrix_float4x4
-	Matrix_float3x3    C.matrix_float3x3
-	Float              C.float
-	Uint16             C.uint16_t
-	MTLPixelFormat     C.MTLPixelFormat
-	MTLResourceOptions C.MTLResourceOptions
-	MTLPrimitiveType   C.MTLPrimitiveType
-	MTLIndexType       C.MTLIndexType
-	MTLCompareFunction C.MTLCompareFunction
-	MTLWinding         C.MTLWinding
-	MTLCullMode        C.MTLCullMode
+	MTLLoadAction          C.MTLLoadAction
+	MTLStoreAction         C.MTLStoreAction
+	Vector_float4          C.vector_float4
+	Vector_float3          C.vector_float3
+	Vector_float2          C.vector_float2
+	Matrix_float4x4        C.matrix_float4x4
+	Matrix_float3x3        C.matrix_float3x3
+	Float                  C.float
+	Uint16                 C.uint16_t
+	MTLRegion              C.MTLRegion
+	MTLTextureUsage        C.MTLTextureUsage
+	MTLPixelFormat         C.MTLPixelFormat
+	MTLResourceOptions     C.MTLResourceOptions
+	MTLPrimitiveType       C.MTLPrimitiveType
+	MTLIndexType           C.MTLIndexType
+	MTLCompareFunction     C.MTLCompareFunction
+	MTLWinding             C.MTLWinding
+	MTLCullMode            C.MTLCullMode
+	MTLSamplerAddressMode  C.MTLSamplerAddressMode
+	MTLSamplerMinMagFilter C.MTLSamplerMinMagFilter
+	MTLSamplerMipFilter    C.MTLSamplerMipFilter
 )
 
 type MTLClearColor struct {
@@ -331,13 +444,19 @@ type MTLClearColor struct {
 }
 
 const (
+	MTLTextureUsageShaderRead MTLTextureUsage = C.MTLTextureUsageShaderRead
+
+	MTLPixelFormatRGBA8Unorm            MTLPixelFormat = C.MTLPixelFormatRGBA8Unorm
 	MTLPixelFormatBGRA8Unorm            MTLPixelFormat = C.MTLPixelFormatBGRA8Unorm
 	MTLPixelFormatDepth32Float          MTLPixelFormat = C.MTLPixelFormatDepth32Float
 	MTLPixelFormatInvalid               MTLPixelFormat = C.MTLPixelFormatInvalid
 	MTLPixelFormatDepth32Float_Stencil8 MTLPixelFormat = C.MTLPixelFormatDepth32Float_Stencil8
 
+	MTLLoadActionLoad        MTLLoadAction      = C.MTLLoadActionLoad
 	MTLLoadActionClear       MTLLoadAction      = C.MTLLoadActionClear
+	MTLLoadActionDontCare    MTLLoadAction      = C.MTLLoadActionDontCare
 	MTLStoreActionStore      MTLStoreAction     = C.MTLStoreActionStore
+	MTLStoreActionDontCare   MTLStoreAction     = C.MTLStoreActionDontCare
 	MTLPrimitiveTypeTriangle MTLPrimitiveType   = C.MTLPrimitiveTypeTriangle
 	MTLIndexTypeUInt16       MTLIndexType       = C.MTLIndexTypeUInt16
 	MTLCompareFunctionLess   MTLCompareFunction = C.MTLCompareFunctionLess
@@ -346,6 +465,11 @@ const (
 	MTLCullModeBack            MTLCullMode = C.MTLCullModeBack
 
 	MTLResourceCPUCacheModeDefaultCache = C.MTLResourceCPUCacheModeDefaultCache
+
+	MTLSamplerAddressModeClampToEdge MTLSamplerAddressMode  = C.MTLSamplerAddressModeClampToEdge
+	MTLSamplerMinMagFilterNearest    MTLSamplerMinMagFilter = C.MTLSamplerMinMagFilterNearest
+	MTLSamplerMinMagFilterLinear     MTLSamplerMinMagFilter = C.MTLSamplerMinMagFilterLinear
+	MTLSamplerMipFilterLinear        MTLSamplerMipFilter    = C.MTLSamplerMipFilterLinear
 )
 
 type ColorAttachment struct {

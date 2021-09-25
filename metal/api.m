@@ -108,6 +108,14 @@ void *MTLDevice_newDepthStencilStateWithDescriptor(void *device, void *stencilDe
     return (id<MTLDepthStencilState>) [(id<MTLDevice>)device newDepthStencilStateWithDescriptor:(MTLDepthStencilDescriptor *)stencilDescriptor];
 }
 
+void *MTLDevice_newTextureWithDescriptor(void *device, void *textureDescriptor) {
+    return (id<MTLTexture>) [(id<MTLDevice>)device newTextureWithDescriptor:(MTLTextureDescriptor *)textureDescriptor];
+}
+
+void *MTLDevice_newSamplerStateWithDescriptor(void *device, void *samplerDescriptor) {
+    return (id<MTLSamplerState>) [(id<MTLDevice>)device newSamplerStateWithDescriptor:(MTLSamplerDescriptor *)samplerDescriptor];
+}
+
 void *MTLLibrary_newFunctionWithName(void *library, char *name) {
     NSString *nsName = [NSString stringWithUTF8String:name];
     return (id<MTLFunction>) [(id<MTLLibrary>)library newFunctionWithName:nsName];
@@ -127,6 +135,21 @@ void MTLCommandBuffer_presentDrawable(void *commandBuffer, void *drawable) {
 
 void MTLCommandBuffer_commit(void *commandBuffer) {
     [(id<MTLCommandBuffer>)commandBuffer commit];
+}
+
+void MTLCommandBuffer_waitUntilCompleted(void *commandBuffer) {
+    [(id<MTLCommandBuffer>)commandBuffer waitUntilCompleted];
+}
+
+void *MTLCommandBuffer_blitCommandEncoder(void *commandBuffer) {
+    return (id<MTLBlitCommandEncoder>) [(id<MTLCommandBuffer>)commandBuffer blitCommandEncoder];
+}
+
+void golangCompleteHandler(void *, void *);
+void MTLCommandBuffer_addCompletedHandler(void *commandBuffer, void *block) {
+    [(id<MTLCommandBuffer>)commandBuffer addCompletedHandler: ^(id<MTLCommandBuffer> cb) {
+        golangCompleteHandler(block, cb);
+    }];
 }
 
 void MTLRenderCommandEncoder_endEncoding(void *commandEncoder) {
@@ -157,8 +180,16 @@ void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveTy
     [(id<MTLRenderCommandEncoder>) commandEncoder drawPrimitives:primitiveType vertexStart:start vertexCount:count];
 }
 
-void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset) {    
+void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset) {
     [(id<MTLRenderCommandEncoder>) commandEncoder drawIndexedPrimitives:primitiveType indexCount:indexCount indexType:indexType indexBuffer:(id<MTLBuffer>)indexBuffer indexBufferOffset:indexBufferOffset];
+}
+
+void MTLRenderCommandEncoder_setFragmentTexture(void *commandEncoder, void *texture, int atIndex) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setFragmentTexture:(id<MTLTexture>) texture atIndex:atIndex];
+}
+
+void MTLRenderCommandEncoder_setFragmentSamplerState(void *commandEncoder, void *samplerState, int atIndex) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setFragmentSamplerState:(id<MTLSamplerState>) samplerState atIndex:atIndex];
 }
 
 void *MTLRenderPipelineDescriptor_colorAttachments(void *pdesc, int idx) {
@@ -167,7 +198,7 @@ void *MTLRenderPipelineDescriptor_colorAttachments(void *pdesc, int idx) {
 }
 
 void colorAttachments_set_pixelFormat(void *cad, MTLPixelFormat pixelFormat) {
-    ((MTLRenderPipelineColorAttachmentDescriptor *)cad).pixelFormat = pixelFormat; 
+    ((MTLRenderPipelineColorAttachmentDescriptor *)cad).pixelFormat = pixelFormat;
 }
 
 void *MTLRenderPassDescriptor_colorAttachments(void *rpdesc, int idx) {
@@ -176,7 +207,7 @@ void *MTLRenderPassDescriptor_colorAttachments(void *rpdesc, int idx) {
 }
 
 void colorAttachments_set_loadAction(void *cad, MTLLoadAction loadAction) {
-    ((MTLRenderPassColorAttachmentDescriptor *)cad).loadAction = loadAction; 
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).loadAction = loadAction;
 }
 
 void colorAttachments_set_storeAction(void *cad, MTLStoreAction storeAction) {
@@ -184,7 +215,7 @@ void colorAttachments_set_storeAction(void *cad, MTLStoreAction storeAction) {
 }
 
 void colorAttachments_set_clearColor(void *cad, MTLClearColor clearColor) {
-    ((MTLRenderPassColorAttachmentDescriptor *)cad).clearColor = clearColor;    
+    ((MTLRenderPassColorAttachmentDescriptor *)cad).clearColor = clearColor;
 }
 
 void colorAttachments_set_texture(void *cad, void *texture) {
@@ -221,4 +252,57 @@ void MTLDepthStencilDescriptor_set_depthWriteEnabled(void *dsdesc, bool enabled)
 
 void *MTLBuffer_contents(void *buffer) {
     return ((id<MTLBuffer>) buffer).contents;
+}
+
+void *MTLTextureDescriptor_texture2DDescriptorWithPixelFormat(MTLPixelFormat pixelFormat, int width, int height, bool mipmapped) {
+    return (MTLTextureDescriptor *) [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:pixelFormat width:width height:height mipmapped:mipmapped];
+}
+
+void MTLTextureDescriptor_set_usage(void *tdesc, MTLTextureUsage usage) {
+    ((MTLTextureDescriptor *) tdesc).usage = usage;
+}
+
+MTLRegion MTLRegion_MTLRegionMake2D(int x, int y, int width, int height) {
+    return MTLRegionMake2D(x, y, width, height);
+}
+
+void MTLTexture_setLabel(void *texture, char *label) {
+    NSString *nsLabel = [NSString stringWithUTF8String:label];
+    [(id<MTLTexture>) texture setLabel:nsLabel];
+}
+
+void MTLTexture_replaceRegion(void *texture, MTLRegion region, int minmapLevel, void *imageData, int bytesPerRow) {
+    return [(id<MTLTexture>) texture replaceRegion:region mipmapLevel:minmapLevel withBytes:imageData bytesPerRow:bytesPerRow];
+}
+
+void MTLBlitCommandEncoder_generateMipmapsForTexture(void *commandEncoder, void *texture) {
+    [(id<MTLBlitCommandEncoder>) commandEncoder generateMipmapsForTexture:(id<MTLTexture>) texture];
+}
+
+void MTLBlitCommandEncoder_endEncoding(void *commandEncoder) {
+    [(id<MTLBlitCommandEncoder>) commandEncoder endEncoding];
+}
+
+void *MTLSamplerDescriptor_new() {
+    return (MTLSamplerDescriptor *) [MTLSamplerDescriptor new];
+}
+
+void MTLSamplerDescriptor_setSAddressMode(void *sdesc, MTLSamplerAddressMode mode) {
+    ((MTLSamplerDescriptor *) sdesc).sAddressMode = mode;
+}
+
+void MTLSamplerDescriptor_setTAddressMode(void *sdesc, MTLSamplerAddressMode mode) {
+    ((MTLSamplerDescriptor *) sdesc).tAddressMode = mode;
+}
+
+void MTLSamplerDescriptor_setMinFilter(void *sdesc, MTLSamplerMinMagFilter filter) {
+    ((MTLSamplerDescriptor *) sdesc).minFilter = filter;
+}
+
+void MTLSamplerDescriptor_setMagFilter(void *sdesc, MTLSamplerMinMagFilter filter) {
+    ((MTLSamplerDescriptor *) sdesc).magFilter = filter;
+}
+
+void MTLSamplerDescriptor_setMipFilter(void *sdesc, MTLSamplerMipFilter filter) {
+    ((MTLSamplerDescriptor *) sdesc).mipFilter = filter;
 }
