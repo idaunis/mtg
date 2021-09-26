@@ -83,6 +83,16 @@ void RunApp() {
     [NSApp activateIgnoringOtherApps:YES];
     [NSApp run];
 }
+char *GetBundlePath() {
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSString *appPath = [bundle bundlePath];
+    return (char *) [appPath UTF8String];
+}
+char *GetResourcePath() {
+    NSBundle *bundle = [NSBundle mainBundle];
+    NSString *resourcePath = [bundle resourcePath];
+    return (char *) [resourcePath UTF8String];
+}
 */
 import "C"
 
@@ -109,6 +119,14 @@ func RenderDelegate(view *MTKView, init, draw func(*MTKView)) {
 	}
 	delegates[viewAddr] = delegateFuncs{init, draw}
 	C.RenderDelegate(view.ptr)
+}
+
+func GetBundlePath() string {
+	return C.GoString(C.GetBundlePath())
+}
+
+func GetResourcePath() string {
+	return C.GoString(C.GetResourcePath())
 }
 
 func RunApp() {
