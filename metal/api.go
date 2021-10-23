@@ -9,7 +9,6 @@ package metal
 import "C"
 
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -128,7 +127,6 @@ func (s *MTLDevice) NewLibraryWithSource(source string) *MTLLibrary {
 }
 
 func (s *MTLDevice) NewBufferWithBytes(data unsafe.Pointer, size uintptr, count int, options MTLResourceOptions) *MTLBuffer {
-	fmt.Println(C.int(size) * C.int(count))
 	ptr := C.MTLDevice_newBufferWithBytes(s.ptr, data, C.int(size)*C.int(count), C.MTLResourceOptions(options))
 	return &MTLBuffer{ptr, count}
 }
@@ -290,6 +288,14 @@ func (s *MTLRenderCommandEncoder) SetCullMode(cullmode MTLCullMode) {
 
 func (s *MTLRenderCommandEncoder) SetVertexBuffer(ps *MTLBuffer, offset int, atIndex int) {
 	C.MTLRenderCommandEncoder_setVertexBuffer(s.ptr, ps.ptr, C.int(offset), C.int(atIndex))
+}
+
+func (s *MTLRenderCommandEncoder) SetVertexBytes(data unsafe.Pointer, length uintptr, atIndex int) {
+	C.MTLRenderCommandEncoder_setVertexBytes(s.ptr, data, C.int(length), C.int(atIndex))
+}
+
+func (s *MTLRenderCommandEncoder) SetFragmentBytes(data unsafe.Pointer, length uintptr, atIndex int) {
+	C.MTLRenderCommandEncoder_setFragmentBytes(s.ptr, data, C.int(length), C.int(atIndex))
 }
 
 func (s *MTLRenderCommandEncoder) DrawPrimitives(primitiveType MTLPrimitiveType, vertexStart int, vertexCount int) {

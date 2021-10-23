@@ -39,6 +39,8 @@ void MTLCommandBuffer_addCompletedHandler(void *commandBuffer, void *block);
 void MTLRenderCommandEncoder_setRenderPipelineState(void *commandEncoder, void *pipelineState);
 void MTLRenderCommandEncoder_setDepthStencilState(void *commandEncoder, void *depthStencilState);
 void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vb, int offset, int atIndex);
+void MTLRenderCommandEncoder_setVertexBytes(void *commandEncoder, void *bytes, int offset, int atIndex);
+void MTLRenderCommandEncoder_setFragmentBytes(void *commandEncoder, void *bytes, int offset, int atIndex);
 void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveType type, int start, int count);
 void MTLRenderCommandEncoder_drawIndexedPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int indexCount, MTLIndexType indexType, void *indexBuffer, int indexBufferOffset);
 void MTLRenderCommandEncoder_setFrontFacingWinding(void *commandEncoder, MTLWinding winding);

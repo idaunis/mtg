@@ -176,6 +176,14 @@ void MTLRenderCommandEncoder_setVertexBuffer(void *commandEncoder, void *vertexB
     [(id<MTLRenderCommandEncoder>) commandEncoder setVertexBuffer:(id<MTLBuffer>)vertexBuffer offset:offset atIndex:atIndex];
 }
 
+void MTLRenderCommandEncoder_setVertexBytes(void *commandEncoder, void *bytes, int offset, int atIndex) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setVertexBytes:bytes length:offset atIndex:atIndex];
+}
+
+void MTLRenderCommandEncoder_setFragmentBytes(void *commandEncoder, void *bytes, int offset, int atIndex) {
+    [(id<MTLRenderCommandEncoder>) commandEncoder setFragmentBytes:bytes length:offset atIndex:atIndex];
+}
+
 void MTLRenderCommandEncoder_drawPrimitives(void *commandEncoder, MTLPrimitiveType primitiveType, int start, int count) {
     [(id<MTLRenderCommandEncoder>) commandEncoder drawPrimitives:primitiveType vertexStart:start vertexCount:count];
 }
