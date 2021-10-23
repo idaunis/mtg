@@ -1,7 +1,17 @@
+# mtg - Metal API support for Go
+
+mtg is a Go package that adds support of the [Metal Framework](https://developer.apple.com/documentation/metal?language=objc) API for your Go applications.
+
+mtg is a light weight cgo wrapper around the objective-c metal api, that allows to quickly build applications with metal.
+
+mtg aims to be low-level, fast, and performant, and methods mimic as much as possible the metal API naming conventions used in swift and objective-c.
+
+## Example Usage
+
+```go
 package main
 
 import (
-	_ "embed"
 	"unsafe"
 
 	"github.com/idaunis/mtg/metal"
@@ -13,9 +23,6 @@ var (
 	metalLayer   *metal.CAMetalLayer
 	pipeline     *metal.MTLRenderPipelineState
 	vertexBuffer *metal.MTLBuffer
-
-	//go:embed triangle.metal
-	metalSource string
 )
 
 func makeBuffers() *metal.MTLBuffer {
@@ -37,6 +44,22 @@ func initDelegate(view *metal.MTKView) {
 	commandQueue = device.NewCommandQueue()
 	vertexBuffer = makeBuffers()
 
+	metalSource := `
+		using namespace metal;
+
+		struct Vertex {
+			float4 position [[position]];
+			float4 color;
+		};
+
+		vertex Vertex vertex_main(const device Vertex *vertices [[buffer(0)]], uint vid [[vertex_id]]) {
+			return vertices[vid];
+		}
+
+		fragment float4 fragment_main(Vertex inVertex [[stage_in]]) {
+			return inVertex.color;
+		}
+	`
 	library := device.NewLibraryWithSource(metalSource)
 	vertexFunc := library.NewFunctionWithName("vertex_main")
 	fragmentFunc := library.NewFunctionWithName("fragment_main")
@@ -79,3 +102,25 @@ func main() {
 	metal.RenderDelegate(metal.CreateWindow(), initDelegate, drawDelegate)
 	metal.RunApp()
 }
+
+```
+
+See the [examples](https://github.com/idaunis/mtg/examples) for more detailed examples (loading .obj files and textures).
+
+![teapot example](https://github.com/idaunis/mtg/blob/main/examples/teapot/preview.png?raw=true)
+
+
+## Debugging
+
+To enable metal API validation for debugging set the following env var:
+
+```
+export METAL_DEVICE_WRAPPER_TYPE=1
+```
+
+## Features
+
+* Command setup: queue/buffer/encoder including complete handler
+* Rendering: vertex/fragment function support, render pipelines to draw primitives, loading textures, minmap generation
+* Vector / Matrix / SIMD type support and basic matrix operations
+* Support loading 3D objects with normals and UV mapping (Wavefront .obj file)

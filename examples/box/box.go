@@ -1,9 +1,7 @@
 package main
 
 import (
-	"errors"
-	"fmt"
-	"io/ioutil"
+	_ "embed"
 	"math"
 	"unsafe"
 
@@ -12,7 +10,6 @@ import (
 
 var (
 	device            *metal.MTLDevice
-	library           *metal.MTLLibrary
 	commandQueue      *metal.MTLCommandQueue
 	metalLayer        *metal.CAMetalLayer
 	pipeline          *metal.MTLRenderPipelineState
@@ -20,6 +17,8 @@ var (
 	indexBuffer       *metal.MTLBuffer
 	uniformBuffer     *metal.MTLBuffer
 	depthStencilState *metal.MTLDepthStencilState
+	//go:embed box.metal
+	metalSource string
 )
 
 type uniforms struct {
@@ -63,6 +62,7 @@ func initDelegate(view *metal.MTKView) {
 
 	vertexBuffer, indexBuffer, uniformBuffer = makeBuffers()
 
+	library := device.NewLibraryWithSource(metalSource)
 	pipelineDescriptor := metal.NewMTLRenderPipelineDescriptor()
 	pipelineDescriptor.SetVertexFunction(library.NewFunctionWithName("vertex_project"))
 	pipelineDescriptor.SetFragmentFunction(library.NewFunctionWithName("fragment_flatcolor"))
@@ -151,35 +151,8 @@ func drawDelegate(view *metal.MTKView) {
 	commandBuffer.Commit()
 }
 
-func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, error) {
-	if device == nil {
-		return nil, errors.New("device not initialized")
-	}
-	source, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: have two methods one to load lib as source and another to load a compiled metallib
-	// as a reminder to compile a metallib we can do:
-	// > xcrun -sdk macosx metal -c shaders.metal -o shaders.air
-	// > xcrun -sdk macosx metallib shaders.air -o shaders.metallib
-
-	return device.NewLibraryWithSource(string(source)), nil
-}
-
 func main() {
-	var err error
-
 	metal.CreateApp()
-	w := metal.CreateWindow()
-
-	library, err = libraryFromFile(w.Device(), "box.metal")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	metal.RenderDelegate(w, initDelegate, drawDelegate)
+	metal.RenderDelegate(metal.CreateWindow(), initDelegate, drawDelegate)
 	metal.RunApp()
 }

@@ -37,7 +37,7 @@ type vertex struct {
 func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	uniforms := uniforms{}
 	vertices := []vertex{}
-	model, _ := obj.Parse("teapot2.obj")
+	model, _ := obj.Parse("teapot.obj")
 	group := model.GetGroup(1)
 
 	// group.GenerateNormals()
