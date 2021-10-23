@@ -28,9 +28,6 @@ func makeBuffers() *metal.MTLBuffer {
 	size := unsafe.Sizeof(vertices[0]) * uintptr(count)
 	data := unsafe.Pointer(&vertices[0][0])
 
-	// b := (*[1 << 30]byte)(unsafe.Pointer(&vertices[0][0]))[0:size]
-
-	// return device.NewBufferWithVectors2(vertices, metal.MTLResourceCPUCacheModeDefaultCache)
 	return device.NewBufferWithBytes(data, size, count, metal.MTLResourceCPUCacheModeDefaultCache)
 }
 
@@ -50,8 +47,6 @@ func initDelegate(view *metal.MTKView) {
 	pipelineDescriptor.ColorAttachment(0).SetPixelFormat(metal.MTLPixelFormatBGRA8Unorm)
 
 	pipeline = device.NewRenderPipelineStateWithDescriptor(pipelineDescriptor)
-
-	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, vertexFunc, fragmentFunc, "pipeline:", pipeline)
 }
 
 func drawDelegate(view *metal.MTKView) {
@@ -77,8 +72,6 @@ func drawDelegate(view *metal.MTKView) {
 	commandEncoder.EndEncoding()
 	commandBuffer.PresentDrawable(drawable)
 	commandBuffer.Commit()
-
-	fmt.Println(metalLayer, drawable, renderPassDescriptor, texture, commandEncoder)
 }
 
 func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, error) {
@@ -94,11 +87,10 @@ func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, e
 }
 
 func main() {
-	var err error
-
 	metal.CreateApp()
 	w := metal.CreateWindow()
 
+	var err error
 	library, err = libraryFromFile(w.Device(), "triangle.metal")
 	if err != nil {
 		fmt.Println(err)

@@ -46,17 +46,9 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 	})
 	indices := group.Indices
 
-	fmt.Println(unsafe.Sizeof(vertices[0]), len(vertices))
-	fmt.Println(unsafe.Sizeof(indices[0]), len(indices))
-	fmt.Println(unsafe.Sizeof(uniforms))
-
 	return device.NewBufferWithBytes(unsafe.Pointer(&vertices[0]), unsafe.Sizeof(vertices[0]), len(vertices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&indices[0]), unsafe.Sizeof(indices[0]), len(indices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 1, metal.MTLResourceCPUCacheModeDefaultCache)
-}
-
-func align256(size uintptr) uintptr {
-	return uintptr((int(size) + 0xFF) & -0x100)
 }
 
 func initDelegate(view *metal.MTKView) {
@@ -81,8 +73,6 @@ func initDelegate(view *metal.MTKView) {
 	pipeline = device.NewRenderPipelineStateWithDescriptor(pipelineDescriptor)
 
 	commandQueue = device.NewCommandQueue()
-
-	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, "pipeline:", pipeline)
 }
 
 var (
@@ -181,11 +171,10 @@ func libraryFromFile(device *metal.MTLDevice, name string) (*metal.MTLLibrary, e
 }
 
 func main() {
-	var err error
-
 	metal.CreateApp()
 	w := metal.CreateWindow()
 
+	var err error
 	library, err = libraryFromFile(w.Device(), "shaders.metal")
 	if err != nil {
 		fmt.Println(err)
