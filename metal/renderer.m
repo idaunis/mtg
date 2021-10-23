@@ -26,7 +26,6 @@ void renderInitWithMetalKitView(MTKView *);
 
 - (void)mtkView:(nonnull MTKView *)view drawableSizeWillChange:(CGSize)size
 {
-    NSLog(@"drawableSizeWillChange");
 }
 
 @end

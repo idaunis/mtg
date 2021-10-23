@@ -76,8 +76,6 @@ void RenderDelegate(void *mtkView) {
     [renderer mtkView:(MTKView *)mtkView drawableSizeWillChange:((MTKView *)mtkView).bounds.size];
 
     ((MTKView *)mtkView).delegate = renderer;
-
-    NSLog(@"ok");
 }
 void RunApp() {
     [NSApp activateIgnoringOtherApps:YES];

@@ -50,21 +50,9 @@ func makeBuffers() (*metal.MTLBuffer, *metal.MTLBuffer, *metal.MTLBuffer) {
 
 	uniforms := uniforms{}
 
-	size := unsafe.Sizeof(uniforms)
-	b := (*[1 << 30]byte)(unsafe.Pointer(&uniforms))[0:size]
-	alignedUniformsSize := align256(size)
-	fmt.Println("***", b, size, alignedUniformsSize)
-
-	fmt.Println("***", unsafe.Sizeof(indices[0])*uintptr(len(indices)))
-
 	return device.NewBufferWithVectors2(vertices, metal.MTLResourceCPUCacheModeDefaultCache),
-		// device.NewBufferWithInts(indices, metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&indices[0]), unsafe.Sizeof(indices[0]), len(indices), metal.MTLResourceCPUCacheModeDefaultCache),
 		device.NewBufferWithBytes(unsafe.Pointer(&uniforms), unsafe.Sizeof(uniforms), 1, metal.MTLResourceCPUCacheModeDefaultCache)
-}
-
-func align256(size uintptr) uintptr {
-	return uintptr((int(size) + 0xFF) & -0x100)
 }
 
 func initDelegate(view *metal.MTKView) {
@@ -89,8 +77,6 @@ func initDelegate(view *metal.MTKView) {
 	pipeline = device.NewRenderPipelineStateWithDescriptor(pipelineDescriptor)
 
 	commandQueue = device.NewCommandQueue()
-
-	fmt.Println("InitWithMetalKitView", view, device, metalLayer, commandQueue, library, "pipeline:", pipeline)
 }
 
 var (
